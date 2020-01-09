@@ -148,5 +148,5 @@ if __name__ == '__main__':
     # get_nsfw(saved_all)
     # get_media(saved_posts, media_type="vid")
     # get_subreddit(saved_all, ["wtf", "python"])
-    get_subreddit(saved_all, "argentina")
+    get_subreddit(saved_all, "androiddev")
     print(time.time() - t0)
