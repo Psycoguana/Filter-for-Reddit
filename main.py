@@ -149,4 +149,4 @@ if __name__ == '__main__':
     # get_media(saved_posts, media_type="vid")
     # get_subreddit(saved_all, ["wtf", "python"])
     get_subreddit(saved_all, "argentina")
-    print(t0)
+    print(time.time() - t0)
