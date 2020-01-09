@@ -1,8 +1,10 @@
 import re
 import time
+from terminaltables import AsciiTable
 import praw
 from praw.models.reddit.submission import Submission
 from praw.models.reddit.comment import Comment
+
 
 reddit = praw.Reddit('USER', user_agent='saved_reddit_script')
 user = reddit.user.me()
@@ -12,7 +14,8 @@ print(f"Hello {user}")
 
 def get_saved():
     """Get every saved elements and separate posts from comments"""
-    saved = reddit.redditor(str(user)).saved(limit=50)
+    # Change limit to 100 or none
+    saved = reddit.redditor(str(user)).saved(limit=20)
 
     posts = []
     comments = []
@@ -30,6 +33,7 @@ def get_saved():
 
 
 def parse_content(elements, el_type=None):
+    table_data = ["Element", "Link"]
     parsed_elements = []
     parsed_posts = []
     parsed_comments = []
@@ -44,12 +48,14 @@ def parse_content(elements, el_type=None):
             title = post.title
             link = rlink + post.permalink
 
+            table_data.append([title, link])
             parsed_posts.append(return_format(title, link))
             parsed_elements.append(return_format(title, link))
         else:
             comment = reddit.comment(element)
             title = comment.body[0:70] if len(comment.body) > 71 else comment.body
             link = rlink + comment.permalink
+            table_data.append([title, link])
             parsed_comments.append(return_format(title, link))
             parsed_elements.append(return_format(title, link))
         i += 1
@@ -81,9 +87,15 @@ def get_self(posts):
 def get_nsfw(elements):
     nsfw = []
     for element in elements:
-        if reddit.submission(element).over_18:
-            nsfw.append(element)
-    nsfw = parse_content(nsfw, el_type="posts")
+        print(element)
+        if type(element) == Submission:
+            if reddit.submission(element).over_18:
+                nsfw.append(element)
+        else:
+            if reddit.comment(element).subreddit.over18:
+                nsfw.append(element)
+
+    nsfw = parse_content(nsfw)
     for post in nsfw:
         print(post)
 
@@ -114,7 +126,7 @@ def get_media(posts, media_type="all"):
         # i.redd.it/[ANYTHING].gif
         pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
     elif media_type == "vid":
-        pattern = "pornhub.com|v\.redd\.it|youtube.com"
+        pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
     else:
         pattern = ".+"
 
@@ -130,9 +142,11 @@ def get_media(posts, media_type="all"):
 
 
 if __name__ == '__main__':
+    t0 = time.time()
     saved_all, saved_posts, saved_comments = get_saved()
     print("All posts gathered")
-    #get_media(saved_posts, media_type="vid")
-    t0 = time.time()
-    get_subreddit(saved_all, ["wtf", "python"])
+    # get_nsfw(saved_all)
+    # get_media(saved_posts, media_type="vid")
+    # get_subreddit(saved_all, ["wtf", "python"])
+    get_subreddit(saved_all, "argentina")
     print(t0)
