@@ -2,12 +2,16 @@ import re
 import time
 from terminaltables import AsciiTable
 import praw
+from prawcore.exceptions import OAuthException
 from praw.models.reddit.submission import Submission
 from praw.models.reddit.comment import Comment
 
 
 reddit = praw.Reddit('USER', user_agent='saved_reddit_script')
-user = reddit.user.me()
+try:
+    user = reddit.user.me()
+except OAuthException:
+    raise Exception("OAuthException: Wrong username or password")
 
 print(f"Hello {user}")
 
@@ -15,7 +19,7 @@ print(f"Hello {user}")
 def get_saved():
     """Get every saved elements and separate posts from comments"""
     # Change limit to 100 or none
-    saved = reddit.redditor(str(user)).saved(limit=20)
+    saved = reddit.redditor(str(user)).saved(limit=100)
 
     posts = []
     comments = []
@@ -148,5 +152,5 @@ if __name__ == '__main__':
     # get_nsfw(saved_all)
     # get_media(saved_posts, media_type="vid")
     # get_subreddit(saved_all, ["wtf", "python"])
-    get_subreddit(saved_all, "androiddev")
+    get_subreddit(saved_all, "AskReddit")
     print(time.time() - t0)
