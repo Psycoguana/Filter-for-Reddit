@@ -1,11 +1,30 @@
 import re
 import time
-from terminaltables import AsciiTable
-import praw
+from typing import List
+from tabulate import tabulate
 from prawcore.exceptions import OAuthException
 from praw.models.reddit.submission import Submission
-from praw.models.reddit.comment import Comment
+import praw.exceptions
+from praw.models.reddit.base import RedditBase
 
+LIMIT = 100
+
+CHOICES = """What do you want to get?
+1. All.
+2. Self.
+3. Media.
+4. Specific subreddits.
+5. NSFW.
+6. EXTERNAL LINKS ?????????????
+
+0. Exit.
+"""
+MEDIA_CHOICES = """1. Images
+2. Gifs
+3. Videos
+4. All of the above
+
+0. Return"""
 
 reddit = praw.Reddit('USER', user_agent='saved_reddit_script')
 try:
@@ -16,115 +35,136 @@ except OAuthException:
 print(f"Hello {user}")
 
 
+def main():
+    user_input = input(CHOICES)
+    saved = get_saved()
+
+    while user_input != '0':
+        if user_input == '1':
+            matched = get_all(saved)
+            parse_content(matched)
+        elif user_input == '2':
+            matched = get_self(saved)
+            parse_content(matched)
+        elif user_input == '3':
+            media_menu(saved)
+        elif user_input == '4':
+            subs = ask_for_subreddits()
+            matched = get_subreddit(saved, subs)
+            parse_content(matched)
+        elif user_input == '5':
+            matched = get_nsfw(saved)
+            parse_content(matched)
+        else:
+            print("Invalid choice")
+        user_input = input(CHOICES)
+
+
+def media_menu(elements):
+    user_input = input(MEDIA_CHOICES)
+    param = ""
+    if user_input == '1':
+        param = "img"
+    elif user_input == '2':
+        param = "gif"
+    elif user_input == '3':
+        param = "vid"
+    elif user_input == '4':
+        param = "all"
+    matched = get_media(elements, param)
+    parse_content(matched)
+
+
+def ask_for_subreddits():
+    """ Asks for subreddits, splits with a + sign and returns a list """
+    entered_subs = []
+    user_input = input("Input your subs (wtf+python): ").split('+')
+    # TODO: Replace this for loop with a list comprehension if possible
+    for sub in user_input:
+        entered_subs.append(sub)
+    return entered_subs
+
+
 def get_saved():
     """Get every saved elements and separate posts from comments"""
     # Change limit to 100 or none
-    saved = reddit.redditor(str(user)).saved(limit=100)
-
-    posts = []
-    comments = []
-    saved_all = []
-
-    for x in saved:
-        saved_all.append(x)
-
-        if type(x) == Submission:
-            posts.append(x)
-        else:
-            comments.append(x)
-
-    return saved_all, posts, comments
+    saved: List[RedditBase] = reddit.user.me().saved(limit=LIMIT)
+    return saved
 
 
-def parse_content(elements, el_type=None):
-    table_data = ["Element", "Link"]
-    parsed_elements = []
-    parsed_posts = []
-    parsed_comments = []
-    rlink = "https://www.reddit.com"
-    return_format = lambda title, link: f"{title}\n{link}\n"
+def parse_content(elements):
+    table_data = []
+    rlink = "https://www.redd.it/"
 
-    i = 0
+    i = 1
     for element in elements:
-        print(f"Working with element: {i}")
+        print(f"Working with element #{i} of #{len(elements)}")
         if type(element) == Submission:
-            post = reddit.submission(element)
-            title = post.title
-            link = rlink + post.permalink
-
-            table_data.append([title, link])
-            parsed_posts.append(return_format(title, link))
-            parsed_elements.append(return_format(title, link))
+            sub = f"r/{element.subreddit}"
+            title = element.title
+            link = rlink + element.id
+            table_data.append([sub, title, link])
         else:
-            comment = reddit.comment(element)
-            title = comment.body[0:70] if len(comment.body) > 71 else comment.body
-            link = rlink + comment.permalink
-            table_data.append([title, link])
-            parsed_comments.append(return_format(title, link))
-            parsed_elements.append(return_format(title, link))
+            sub = f"r/{element.subreddit}"
+            title = element.body[0:70] if len(element.body) > 71 else element.body
+            link = rlink + element.id
+            table_data.append([sub, title, link])
         i += 1
+    _show_table(table_data)
 
-    if el_type == "post":
-        return parsed_posts
-    elif el_type == "comments":
-        return parsed_comments
-    else:
-        return parsed_elements
+
+def _show_table(table_data):
+    print("Generating table")
+    table = tabulate(table_data, headers=["Subreddits", "Posts and Comments", "Links"], tablefmt="psql")
+    print(table)
 
 
 def get_all(elements):
-    for element in parse_content(elements):
-        print(element)
+    all = []
+    for element in elements:
+        all.append(element)
+    return all
 
 
 def get_self(posts):
+    print("get_self() called")
     self_posts = []
+    i = 0
     for post in posts:
-        if reddit.submission(post).selftext:
+        i += 1
+        if type(post) == Submission and post.is_self:
             self_posts.append(post)
-    self_posts = parse_content(self_posts, el_type="post")
 
-    for post in self_posts:
-        print(post)
+    return self_posts
 
 
 def get_nsfw(elements):
+    # TODO: Why is this slow?
+    print("get_nsfw() called")
     nsfw = []
     for element in elements:
         print(element)
-        if type(element) == Submission:
-            if reddit.submission(element).over_18:
-                nsfw.append(element)
-        else:
-            if reddit.comment(element).subreddit.over18:
-                nsfw.append(element)
-
-    nsfw = parse_content(nsfw)
-    for post in nsfw:
-        print(post)
+        if element.subreddit.over18:
+            nsfw.append(element)
+    return nsfw
 
 
-def get_subreddit(elements, subreddit):
-    matched_subreddit = []
+def get_subreddit(elements, subreddits):
+    print("get_subreddit() called")
+    matched_subreddits = []
 
     for element in elements:
-        if type(element) == Submission:
-            if str(reddit.submission(element).subreddit).lower() in subreddit:
-                matched_subreddit.append(element)
-        else:
-            if reddit.comment(element).subreddit == subreddit:
-                matched_subreddit.append(element)
-    matched_subreddit = parse_content(matched_subreddit)
+        if str(element.subreddit).lower() in subreddits:
+            matched_subreddits.append(element)
 
-    for item in matched_subreddit:
-        print(item)
+    return matched_subreddits
 
 
-def get_media(posts, media_type="all"):
+def get_media(posts, media_type):
     """Get media, it can be video, gif or img"""
+    # Here we set the pattern according to the type of file we want
     if media_type == "img":
-        # TODO: This also matches imgur gifs
-        pattern = "i.redd.it\/.+\.jpg|imgur.com"
+        pattern = "i.redd.it\/.+\.jpg|imgur.com\/.+\.jpg"
     elif media_type == "gif":
         # i.imgur.com/[ANYTHING].gifv
         # i.redd.it/[ANYTHING].gif
@@ -134,23 +174,24 @@ def get_media(posts, media_type="all"):
     else:
         pattern = ".+"
 
+    # Now we check each URL and save only the ones that match the previously set pattern
     matched_posts = []
-
     for post in posts:
-        if re.search(pattern, post.url):
+        if type(post) == Submission and re.search(pattern, post.url):
             matched_posts.append(post)
-    matched_posts = parse_content(matched_posts)
 
-    for matched_post in matched_posts:
-        print(matched_post)
+    return matched_posts
 
 
 if __name__ == '__main__':
     t0 = time.time()
-    saved_all, saved_posts, saved_comments = get_saved()
+    # TODO: Rewrite get_saved, parse content, get_all.
+    # TODO: Improve menu
+    # TODO: Fix slow get_nsfw()
+    # TODO: Implement OAuth
+    main()
+    # Retrieving all saved posts
+    saved = get_saved()
     print("All posts gathered")
-    # get_nsfw(saved_all)
-    # get_media(saved_posts, media_type="vid")
-    # get_subreddit(saved_all, ["wtf", "python"])
-    get_subreddit(saved_all, "AskReddit")
-    print(time.time() - t0)
+    # get_nsfw(saved)
+    print(f"Execution time: {(time.time() - t0) / 60}")
