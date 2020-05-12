@@ -16,7 +16,7 @@ CHOICES = """What do you want to get?
 3. Media.
 4. Specific subreddits.
 5. NSFW.
-7. Search in 
+6. Just Posts.
 
 0. Exit.
 """
@@ -56,6 +56,9 @@ def main():
             parse_content(matched)
         elif user_input == '5':
             matched = get_nsfw(saved)
+            parse_content(matched)
+        elif user_input == '6':
+            matched = get_posts(saved)
             parse_content(matched)
         else:
             print("Invalid choice")
@@ -188,6 +191,15 @@ def get_media(posts, media_type):
             matched_posts.append(post)
 
     return matched_posts
+
+
+def get_posts(elements):
+    posts = []
+    for element in elements:
+        if type(element) == Submission:
+            posts.append(element)
+    return posts
+
 
 
 if __name__ == '__main__':
