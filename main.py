@@ -20,6 +20,7 @@ CHOICES = """What do you want to get?
 6. Just Posts.
 7. Just Comments.
 8. Search Post's Titles
+9. Search in Comments
 
 0. Exit.
 """
@@ -70,6 +71,11 @@ def main():
             query = input("What do you want to search: ")
             print("")
             matched = search_posts(saved, query)
+            parse_content(matched)
+        elif user_input == '9':
+            query = input("What do you want to search: ")
+            print("")
+            matched = search_comments(saved, query)
             parse_content(matched)
         else:
             print("Invalid choice")
@@ -227,6 +233,16 @@ def search_posts(elements, query):
         if query.lower() in str(post.title).lower():
             matched_posts.append(post)
     return matched_posts
+
+
+def search_comments(elements, query):
+    comments = get_comments(elements)
+    matched_comments = []
+
+    for comment in comments:
+        if query.lower() in str(comment.body).lower():
+            matched_comments.append(comment)
+    return matched_comments
 
 
 if __name__ == '__main__':
