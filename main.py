@@ -39,6 +39,7 @@ print(f"Hello {user}")
 def main():
     user_input = input(CHOICES)
     saved = get_saved()
+    print("")
 
     while user_input != '0':
         if user_input == '1':
@@ -111,7 +112,10 @@ def parse_content(elements):
             link = rlink + element.id
             table_data.append([sub, title, link])
         i += 1
-    _show_table(table_data)
+    if table_data:
+        _show_table(table_data)
+    else:
+        print("There was nothing found for this query :/")
 
 
 def _show_table(table_data):
@@ -140,14 +144,11 @@ def get_self(posts):
 
 
 def get_nsfw(elements):
-    # TODO: Why is this slow?
-    print("get_nsfw() called")
     nsfw = []
     for element in elements:
-        print(element)
-        if element.subreddit.over18:
+        if element.over_18:
             nsfw.append(element)
-    return nsfw
+        return nsfw
 
 
 def get_subreddit(elements, subreddits):
