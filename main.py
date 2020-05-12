@@ -9,13 +9,14 @@ from praw.models.reddit.base import RedditBase
 
 LIMIT = 100
 
+# TODO: 6. EXTERNAL LINKS, Posts, Search in Posts, Comments, Search in Comments, External Links.
 CHOICES = """What do you want to get?
 1. All.
 2. Self.
 3. Media.
 4. Specific subreddits.
 5. NSFW.
-6. EXTERNAL LINKS ?????????????
+7. Search in 
 
 0. Exit.
 """
