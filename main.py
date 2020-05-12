@@ -10,7 +10,7 @@ from praw.models.reddit.base import RedditBase
 
 LIMIT = 50
 
-# TODO: 6. EXTERNAL LINKS, Posts, Search in Posts, Comments, Search in Comments, External Links.
+# TODO: External Links.
 CHOICES = """What do you want to get?
 1. All.
 2. Self.
@@ -190,12 +190,13 @@ def get_media(posts, media_type):
     """Get media, it can be video, gif or img"""
     # Here we set the pattern according to the type of file we want
     if media_type == "img":
-        pattern = "i.redd.it\/.+\.jpg|imgur.com\/.+\.jpg"
+        pattern = "i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
     elif media_type == "gif":
         # i.imgur.com/[ANYTHING].gifv
         # i.redd.it/[ANYTHING].gif
         pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
     elif media_type == "vid":
+        #This could be improved, don't know how tho
         pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
     else:
         pattern = ".+"
