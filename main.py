@@ -191,8 +191,4 @@ if __name__ == '__main__':
     # TODO: Fix slow get_nsfw()
     # TODO: Implement OAuth
     main()
-    # Retrieving all saved posts
-    saved = get_saved()
-    print("All posts gathered")
-    # get_nsfw(saved)
     print(f"Execution time: {(time.time() - t0) / 60}")
