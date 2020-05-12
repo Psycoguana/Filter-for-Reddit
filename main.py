@@ -19,6 +19,7 @@ CHOICES = """What do you want to get?
 5. NSFW.
 6. Just Posts.
 7. Just Comments.
+8. Search Post's Titles
 
 0. Exit.
 """
@@ -64,6 +65,11 @@ def main():
             parse_content(matched)
         elif user_input == '7':
             matched = get_comments(saved)
+            parse_content(matched)
+        elif user_input == '8':
+            query = input("What do you want to search: ")
+            print("")
+            matched = search_posts(saved, query)
             parse_content(matched)
         else:
             print("Invalid choice")
@@ -112,7 +118,6 @@ def parse_content(elements):
         if type(element) == Submission:
             sub = f"r/{element.subreddit}"
             title = element.title[0:134] if len(element.title) > 135 else element.title
-            print(title)
             link = rlink + element.id
             table_data.append([sub, title, link])
         else:
@@ -212,6 +217,16 @@ def get_comments(elements):
         if type(element) == Comment:
             comments.append(element)
     return comments
+
+
+def search_posts(elements, query):
+    posts = get_posts(elements)
+    matched_posts = []
+
+    for post in posts:
+        if query.lower() in str(post.title).lower():
+            matched_posts.append(post)
+    return matched_posts
 
 
 if __name__ == '__main__':
