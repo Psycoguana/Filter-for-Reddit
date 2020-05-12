@@ -189,7 +189,6 @@ if __name__ == '__main__':
     t0 = time.time()
     # TODO: Rewrite get_saved, parse content, get_all.
     # TODO: Improve menu
-    # TODO: Fix slow get_nsfw()
     # TODO: Implement OAuth
     main()
     print(f"Execution time: {(time.time() - t0) / 60}")
