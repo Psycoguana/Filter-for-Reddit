@@ -7,7 +7,7 @@ from praw.models.reddit.submission import Submission
 import praw.exceptions
 from praw.models.reddit.base import RedditBase
 
-LIMIT = 100
+LIMIT = 50
 
 # TODO: 6. EXTERNAL LINKS, Posts, Search in Posts, Comments, Search in Comments, External Links.
 CHOICES = """What do you want to get?
@@ -100,16 +100,21 @@ def parse_content(elements):
 
     i = 1
     for element in elements:
-        print(f"Working with element #{i} of #{len(elements)}")
+        # print(f"Working with element #{i} of #{len(elements)}")
         if type(element) == Submission:
             sub = f"r/{element.subreddit}"
-            title = element.title
+            title = element.title[0:134] if len(element.title) > 135 else element.title
+            print(title)
             link = rlink + element.id
             table_data.append([sub, title, link])
         else:
             sub = f"r/{element.subreddit}"
-            title = element.body[0:70] if len(element.body) > 71 else element.body
-            link = rlink + element.id
+            title = element.body[0:134] + "..." if len(element.body) > 135 else element.body
+            # Makes comments a little bit tidier by removing new lines.
+            title = " ".join(title.split())
+            # TODO: Fix link
+            # link = f"{rlink}r/{sub}/comments/{element}/-/{element.id}"
+            link = "https://www.reddit.com" + str(element.permalink)
             table_data.append([sub, title, link])
         i += 1
     if table_data:
