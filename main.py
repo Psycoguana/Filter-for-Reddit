@@ -4,6 +4,7 @@ from typing import List
 from tabulate import tabulate
 from prawcore.exceptions import OAuthException
 from praw.models.reddit.submission import Submission
+from praw.models.reddit.comment import Comment
 import praw.exceptions
 from praw.models.reddit.base import RedditBase
 
@@ -17,6 +18,7 @@ CHOICES = """What do you want to get?
 4. Specific subreddits.
 5. NSFW.
 6. Just Posts.
+7. Just Comments.
 
 0. Exit.
 """
@@ -59,6 +61,9 @@ def main():
             parse_content(matched)
         elif user_input == '6':
             matched = get_posts(saved)
+            parse_content(matched)
+        elif user_input == '7':
+            matched = get_comments(saved)
             parse_content(matched)
         else:
             print("Invalid choice")
@@ -200,6 +205,13 @@ def get_posts(elements):
             posts.append(element)
     return posts
 
+
+def get_comments(elements):
+    comments = []
+    for element in elements:
+        if type(element) == Comment:
+            comments.append(element)
+    return comments
 
 
 if __name__ == '__main__':
