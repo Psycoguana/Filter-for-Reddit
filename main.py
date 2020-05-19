@@ -8,7 +8,7 @@ from praw.models.reddit.comment import Comment
 import praw.exceptions
 from praw.models.reddit.base import RedditBase
 
-LIMIT = 50
+LIMIT = 100
 
 # TODO: External Links.
 CHOICES = """What do you want to get?
@@ -21,6 +21,7 @@ CHOICES = """What do you want to get?
 7. Just Comments.
 8. Search Post's Titles
 9. Search in Comments
+10. External Websites
 
 0. Exit.
 """
@@ -76,6 +77,9 @@ def main():
             query = input("What do you want to search: ")
             print("")
             matched = search_comments(saved, query)
+            parse_content(matched)
+        elif user_input == '10':
+            matched = get_external_links(saved)
             parse_content(matched)
         else:
             print("Invalid choice")
@@ -196,7 +200,7 @@ def get_media(posts, media_type):
         # i.redd.it/[ANYTHING].gif
         pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
     elif media_type == "vid":
-        #This could be improved, don't know how tho
+        # This could be improved, don't know how tho
         pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
     else:
         pattern = ".+"
@@ -208,6 +212,21 @@ def get_media(posts, media_type):
             matched_posts.append(post)
 
     return matched_posts
+
+
+def get_external_links(elements):
+    posts = []
+    # This should match any website that is not: Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
+    # aka External sites that don't belong in media.
+    # I suck at regex, so if anyone wants to improve this in any way, I'm up for it :)
+
+    pattern = "^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
+
+    for element in elements:
+        if type(element) == Submission:
+            if re.search(pattern, element.url):
+                posts.append(element)
+    return posts
 
 
 def get_posts(elements):
