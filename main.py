@@ -1,5 +1,6 @@
 import re
 import time
+import click
 from typing import List
 from tabulate import tabulate
 from prawcore.exceptions import OAuthException
@@ -8,7 +9,12 @@ from praw.models.reddit.comment import Comment
 import praw.exceptions
 from praw.models.reddit.base import RedditBase
 
-LIMIT = 100
+
+# TODO: Rewrite get_saved, parse content, get_all.
+# TODO: Improve menu
+# TODO: Implement OAuth
+
+LIMIT = 50
 
 # TODO: External Links.
 CHOICES = """What do you want to get?
@@ -41,234 +47,235 @@ except OAuthException:
 print(f"Hello {user}")
 
 
-def main():
-    user_input = input(CHOICES)
-    saved = get_saved()
-    print("")
+class Instance:
 
-    while user_input != '0':
-        if user_input == '1':
-            matched = get_all(saved)
-            parse_content(matched)
-        elif user_input == '2':
-            matched = get_self(saved)
-            parse_content(matched)
-        elif user_input == '3':
-            media_menu(saved)
-        elif user_input == '4':
-            subs = ask_for_subreddits()
-            matched = get_subreddit(saved, subs)
-            parse_content(matched)
-        elif user_input == '5':
-            matched = get_nsfw(saved)
-            parse_content(matched)
-        elif user_input == '6':
-            matched = get_posts(saved)
-            parse_content(matched)
-        elif user_input == '7':
-            matched = get_comments(saved)
-            parse_content(matched)
-        elif user_input == '8':
-            query = input("What do you want to search: ")
-            print("")
-            matched = search_posts(saved, query)
-            parse_content(matched)
-        elif user_input == '9':
-            query = input("What do you want to search: ")
-            print("")
-            matched = search_comments(saved, query)
-            parse_content(matched)
-        elif user_input == '10':
-            matched = get_external_links(saved)
-            parse_content(matched)
-        else:
-            print("Invalid choice")
+    def __init__(self):
+        self.saved = self.get_saved()
+    
+    @click.group()
+    def cli():
+        pass
+
+    def main(self):
         user_input = input(CHOICES)
+        saved = self.get_saved()
+        print("")
 
+        while user_input != '0':
+            if user_input == '1':
+                matched = get_all(saved)
+                parse_content(matched)
+            elif user_input == '2':
+                matched = get_self(saved)
+                parse_content(matched)
+            elif user_input == '3':
+                media_menu(saved)
+            elif user_input == '4':
+                subs = ask_for_subreddits()
+                matched = get_subreddit(saved, subs)
+                parse_content(matched)
+            elif user_input == '5':
+                matched = get_nsfw(saved)
+                parse_content(matched)
+            elif user_input == '6':
+                matched = get_posts(saved)
+                parse_content(matched)
+            elif user_input == '7':
+                matched = get_comments(saved)
+                parse_content(matched)
+            elif user_input == '8':
+                query = input("What do you want to search: ")
+                print("")
+                matched = search_posts(saved, query)
+                parse_content(matched)
+            elif user_input == '9':
+                query = input("What do you want to search: ")
+                print("")
+                matched = search_comments(saved, query)
+                parse_content(matched)
+            elif user_input == '10':
+                matched = get_external_links(saved)
+                parse_content(matched)
+            else:
+                print("Invalid choice")
+            user_input = input(CHOICES)
 
-def media_menu(elements):
-    user_input = input(MEDIA_CHOICES)
-    param = ""
-    if user_input == '1':
-        param = "img"
-    elif user_input == '2':
-        param = "gif"
-    elif user_input == '3':
-        param = "vid"
-    elif user_input == '4':
-        param = "all"
-    matched = get_media(elements, param)
-    parse_content(matched)
+    def media_menu(self, elements):
+        user_input = input(MEDIA_CHOICES)
+        param = ""
+        if user_input == '1':
+            param = "img"
+        elif user_input == '2':
+            param = "gif"
+        elif user_input == '3':
+            param = "vid"
+        elif user_input == '4':
+            param = "all"
+        matched = get_media(elements, param)
+        parse_content(matched)
 
+    def get_saved(self):
+        """Get every saved elements and separate posts from comments"""
+        # Change limit to 100 or none
+        saved: List[RedditBase] = reddit.user.me().saved(limit=LIMIT)
+        self.saved = saved
+        return saved
 
-def ask_for_subreddits():
-    """ Asks for subreddits, splits with a + sign and returns a list """
-    entered_subs = []
-    user_input = input("Input your subs (wtf+python): ").split('+')
-    # TODO: Replace this for loop with a list comprehension if possible
-    for sub in user_input:
-        entered_subs.append(sub)
-    return entered_subs
+    def parse_content(self):
+        table_data = []
+        rlink = "https://www.redd.it/"
 
-
-def get_saved():
-    """Get every saved elements and separate posts from comments"""
-    # Change limit to 100 or none
-    saved: List[RedditBase] = reddit.user.me().saved(limit=LIMIT)
-    return saved
-
-
-def parse_content(elements):
-    table_data = []
-    rlink = "https://www.redd.it/"
-
-    i = 1
-    for element in elements:
-        # print(f"Working with element #{i} of #{len(elements)}")
-        if type(element) == Submission:
-            sub = f"r/{element.subreddit}"
-            title = element.title[0:134] if len(element.title) > 135 else element.title
-            link = rlink + element.id
-            table_data.append([sub, title, link])
+        i = 1
+        for element in self.elements:
+            # print(f"Working with element #{i} of #{len(elements)}")
+            if type(element) == Submission:
+                sub = f"r/{element.subreddit}"
+                title = element.title[0:134] if len(
+                    element.title) > 135 else element.title
+                link = rlink + element.id
+                table_data.append([sub, title, link])
+            else:
+                sub = f"r/{element.subreddit}"
+                title = element.body[0:134] + \
+                    "..." if len(element.body) > 135 else element.body
+                # Makes comments a little bit tidier by removing new lines.
+                title = " ".join(title.split())
+                # TODO: Fix link
+                # link = f"{rlink}r/{sub}/comments/{element}/-/{element.id}"
+                link = "https://www.reddit.com" + str(element.permalink)
+                table_data.append([sub, title, link])
+            i += 1
+        if table_data:
+            _show_table(table_data)
         else:
-            sub = f"r/{element.subreddit}"
-            title = element.body[0:134] + "..." if len(element.body) > 135 else element.body
-            # Makes comments a little bit tidier by removing new lines.
-            title = " ".join(title.split())
-            # TODO: Fix link
-            # link = f"{rlink}r/{sub}/comments/{element}/-/{element.id}"
-            link = "https://www.reddit.com" + str(element.permalink)
-            table_data.append([sub, title, link])
-        i += 1
-    if table_data:
-        _show_table(table_data)
-    else:
-        print("There was nothing found for this query :/")
+            print("There was nothing found for this query :/")
 
+    def _show_table(self, table_data):
+        print("Generating table")
+        table = tabulate(table_data, headers=[
+            "Subreddits", "Posts and Comments", "Links"], tablefmt="psql")
+        print(table)
 
-def _show_table(table_data):
-    print("Generating table")
-    table = tabulate(table_data, headers=["Subreddits", "Posts and Comments", "Links"], tablefmt="psql")
-    print(table)
+    def get_all(self):
+        all = []
+        for element in self.elements:
+            all.append(element)
+        return all
 
+    def get_self(self):
+        print("get_self() called")
+        self_posts = []
+        i = 0
+        for element in self.saved:
+            i += 1
+            if type(element) == Submission and element.is_self:
+                self_posts.append(element)
 
-def get_all(elements):
-    all = []
-    for element in elements:
-        all.append(element)
-    return all
+        return self_posts
 
+    def get_nsfw(self):
+        nsfw = []
+        for element in self.elements:
+            if element.over_18:
+                nsfw.append(element)
+            return nsfw
 
-def get_self(posts):
-    print("get_self() called")
-    self_posts = []
-    i = 0
-    for post in posts:
-        i += 1
-        if type(post) == Submission and post.is_self:
-            self_posts.append(post)
+    def get_subreddit(self, subreddits):
+        print("get_subreddit() called")
+        matched_subreddits = []
 
-    return self_posts
+        for element in self.elements:
+            if str(element.subreddit).lower() in subreddits:
+                matched_subreddits.append(element)
 
+        return matched_subreddits
 
-def get_nsfw(elements):
-    nsfw = []
-    for element in elements:
-        if element.over_18:
-            nsfw.append(element)
-        return nsfw
+    def get_media(self, media_type):
+        """Get media, it can be video, gif or img"""
+        # Here we set the pattern according to the type of file we want
+        if media_type == "img":
+            pattern = "i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
+        elif media_type == "gif":
+            # i.imgur.com/[ANYTHING].gifv
+            # i.redd.it/[ANYTHING].gif
+            pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
+        elif media_type == "vid":
+            # This could be improved, don't know how tho
+            pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
+        else:  # TODO: Maybe raise an error?
+            pattern = ".+"
 
+        # Now we check each URL and save only the ones that match
+        # the previously set pattern.
+        matched_posts = []
+        for element in self.saved:
+            if type(element) == Submission and re.search(pattern, element.url):
+                matched_posts.append(element)
 
-def get_subreddit(elements, subreddits):
-    print("get_subreddit() called")
-    matched_subreddits = []
+        return matched_posts
 
-    for element in elements:
-        if str(element.subreddit).lower() in subreddits:
-            matched_subreddits.append(element)
+    def get_external_links(self):
+        posts = []
+        # This should match any website that is not: Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
+        # aka External sites that don't belong in media.
+        # I suck at regex, so if anyone wants to improve this in any way, I'm up for it :)
 
-    return matched_subreddits
+        pattern = "^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
 
+        for element in self.elements:
+            if type(element) == Submission:
+                if re.search(pattern, element.url):
+                    posts.append(element)
+        return posts
 
-def get_media(posts, media_type):
-    """Get media, it can be video, gif or img"""
-    # Here we set the pattern according to the type of file we want
-    if media_type == "img":
-        pattern = "i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
-    elif media_type == "gif":
-        # i.imgur.com/[ANYTHING].gifv
-        # i.redd.it/[ANYTHING].gif
-        pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
-    elif media_type == "vid":
-        # This could be improved, don't know how tho
-        pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
-    else:
-        pattern = ".+"
+    def ask_for_subreddits(self):
+        """ Asks for subreddits, splits with a + sign and returns a list """
+        entered_subs = []
+        user_input = input("Input your subs (wtf+python): ").split('+')
+        # TODO: Replace this for loop with a list comprehension if possible
+        for sub in user_input:
+            entered_subs.append(sub)
+        return entered_subs
 
-    # Now we check each URL and save only the ones that match the previously set pattern
-    matched_posts = []
-    for post in posts:
-        if type(post) == Submission and re.search(pattern, post.url):
-            matched_posts.append(post)
-
-    return matched_posts
-
-
-def get_external_links(elements):
-    posts = []
-    # This should match any website that is not: Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
-    # aka External sites that don't belong in media.
-    # I suck at regex, so if anyone wants to improve this in any way, I'm up for it :)
-
-    pattern = "^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
-
-    for element in elements:
-        if type(element) == Submission:
-            if re.search(pattern, element.url):
+    @cli.command()
+    def get_posts(self):
+        click.echo("get_posts called")
+        posts = []
+        for element in self.elements:
+            if type(element) == Submission:
                 posts.append(element)
-    return posts
+        return posts
 
+    def get_comments(self):
+        comments = []
+        for element in self.elements:
+            if type(element) == Comment:
+                comments.append(element)
+        return comments
 
-def get_posts(elements):
-    posts = []
-    for element in elements:
-        if type(element) == Submission:
-            posts.append(element)
-    return posts
+    def search_posts(self, query):
+        posts = self.get_posts()
+        matched_posts = []
 
+        for post in posts:
+            if query.lower() in str(post.title).lower():
+                matched_posts.append(post)
+        return matched_posts
 
-def get_comments(elements):
-    comments = []
-    for element in elements:
-        if type(element) == Comment:
-            comments.append(element)
-    return comments
+    def search_comments(self, query):
+        comments = self.get_comments()
+        matched_comments = []
 
-
-def search_posts(elements, query):
-    posts = get_posts(elements)
-    matched_posts = []
-
-    for post in posts:
-        if query.lower() in str(post.title).lower():
-            matched_posts.append(post)
-    return matched_posts
-
-
-def search_comments(elements, query):
-    comments = get_comments(elements)
-    matched_comments = []
-
-    for comment in comments:
-        if query.lower() in str(comment.body).lower():
-            matched_comments.append(comment)
-    return matched_comments
+        for comment in comments:
+            if query.lower() in str(comment.body).lower():
+                matched_comments.append(comment)
+        return matched_comments
 
 
 if __name__ == '__main__':
-    t0 = time.time()
-    # TODO: Rewrite get_saved, parse content, get_all.
-    # TODO: Improve menu
-    # TODO: Implement OAuth
-    main()
-    print(f"Execution time: {(time.time() - t0) / 60}")
+    Ins = Instance()
+    Ins.cli()
+
+    # matched = search_posts(saved)
+    # # matched = get_comments(saved)
+    # parse_content(matched)
