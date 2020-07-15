@@ -1,5 +1,8 @@
 import re
-import time
+from rich import box
+from rich.progress import track
+from rich.console import Console
+from rich.table import Column, Table
 import click
 from typing import List
 from tabulate import tabulate
@@ -8,7 +11,6 @@ from praw.models.reddit.submission import Submission
 from praw.models.reddit.comment import Comment
 import praw.exceptions
 from praw.models.reddit.base import RedditBase
-
 
 # TODO: Rewrite get_saved, parse content, get_all.
 # TODO: Improve menu
@@ -47,14 +49,13 @@ except OAuthException:
 print(f"Hello {user}")
 
 
-class Instance:
+class Filter:
 
     def __init__(self):
+        self.saved = ""
+
+    def initialize(self):
         self.saved = self.get_saved()
-    
-    @click.group()
-    def cli():
-        pass
 
     def main(self):
         user_input = input(CHOICES)
@@ -111,33 +112,32 @@ class Instance:
             param = "vid"
         elif user_input == '4':
             param = "all"
-        matched = get_media(elements, param)
-        parse_content(matched)
+        matched = self.get_media(elements, param)
+        self.parse_content(matched)
 
     def get_saved(self):
         """Get every saved elements and separate posts from comments"""
         # Change limit to 100 or none
         saved: List[RedditBase] = reddit.user.me().saved(limit=LIMIT)
-        self.saved = saved
         return saved
 
-    def parse_content(self):
+    def parse_content(self, elements):
         table_data = []
-        rlink = "https://www.redd.it/"
+        rlink = "https://www.reddit.com/"
 
         i = 1
-        for element in self.elements:
-            # print(f"Working with element #{i} of #{len(elements)}")
+        for element in elements:
             if type(element) == Submission:
                 sub = f"r/{element.subreddit}"
                 title = element.title[0:134] if len(
                     element.title) > 135 else element.title
                 link = rlink + element.id
+                title = f"[link={link}]{title}[\link]"
                 table_data.append([sub, title, link])
             else:
                 sub = f"r/{element.subreddit}"
                 title = element.body[0:134] + \
-                    "..." if len(element.body) > 135 else element.body
+                        "..." if len(element.body) > 135 else element.body
                 # Makes comments a little bit tidier by removing new lines.
                 title = " ".join(title.split())
                 # TODO: Fix link
@@ -146,19 +146,22 @@ class Instance:
                 table_data.append([sub, title, link])
             i += 1
         if table_data:
-            _show_table(table_data)
+            self._show_table(table_data)
         else:
             print("There was nothing found for this query :/")
 
     def _show_table(self, table_data):
-        print("Generating table")
-        table = tabulate(table_data, headers=[
-            "Subreddits", "Posts and Comments", "Links"], tablefmt="psql")
-        print(table)
+        table = Table(title="Matched Posts", show_header=True, header_style="bold red", box=box.HEAVY)
+        table.add_column("Subreddits", justify='left')
+        table.add_column("Posts and Comments", justify='center')
+        table.add_column("Links", justify='right')
+        for i, _ in enumerate(table_data):
+            table.add_row(*table_data[i])
+        Console().print(table)
 
     def get_all(self):
         all = []
-        for element in self.elements:
+        for element in self.saved:
             all.append(element)
         return all
 
@@ -175,7 +178,7 @@ class Instance:
 
     def get_nsfw(self):
         nsfw = []
-        for element in self.elements:
+        for element in self.saved:
             if element.over_18:
                 nsfw.append(element)
             return nsfw
@@ -184,7 +187,7 @@ class Instance:
         print("get_subreddit() called")
         matched_subreddits = []
 
-        for element in self.elements:
+        for element in self.saved:
             if str(element.subreddit).lower() in subreddits:
                 matched_subreddits.append(element)
 
@@ -222,7 +225,7 @@ class Instance:
 
         pattern = "^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
 
-        for element in self.elements:
+        for element in self.saved:
             if type(element) == Submission:
                 if re.search(pattern, element.url):
                     posts.append(element)
@@ -237,18 +240,17 @@ class Instance:
             entered_subs.append(sub)
         return entered_subs
 
-    @cli.command()
     def get_posts(self):
         click.echo("get_posts called")
         posts = []
-        for element in self.elements:
+        for element in self.saved:
             if type(element) == Submission:
                 posts.append(element)
         return posts
 
     def get_comments(self):
         comments = []
-        for element in self.elements:
+        for element in self.saved:
             if type(element) == Comment:
                 comments.append(element)
         return comments
@@ -272,10 +274,43 @@ class Instance:
         return matched_comments
 
 
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+def show_all():
+    a = Filter.get_all()
+    Filter.parse_content(a)
+
+
+@cli.command()
+@click.argument('query')
+def search_post(query):
+    matched = Filter.search_posts(query)
+    Filter.parse_content(matched)
+
+@cli.command()
+def get_posts():
+    matched = Filter.get_posts()
+    Filter.parse_content(matched)
+
+
+@cli.command()
+def get_comments():
+    matched = Filter.get_comments()
+    Filter.parse_content(matched)
+
+
 if __name__ == '__main__':
-    Ins = Instance()
-    Ins.cli()
+    # TODO: Think how not to call get_saved if im just passing the --help flag
+    Filter = Filter()
+    Filter.initialize()
+    cli()
+
+
+
 
     # matched = search_posts(saved)
     # # matched = get_comments(saved)
-    # parse_content(matched)
