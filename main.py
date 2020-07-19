@@ -1,4 +1,5 @@
 import re
+import sys
 import praw.exceptions
 from rich import box
 from rich.console import Console
@@ -8,6 +9,7 @@ from praw.models.reddit.submission import Submission
 from praw.exceptions import ClientException
 from prawcore.exceptions import ResponseException, OAuthException
 from configparser import NoSectionError, ParsingError
+
 
 # TODO: Improve menu
 # TODO: Implement OAuth
@@ -108,24 +110,29 @@ class Filter:
             return reddit.user.me().saved(limit=LIMIT)
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
+            sys.exit()
 
         except ParsingError as e:
             e = str(e).split("\n")
             print(f"The praw.ini file is not written correctly. An error was found in {e[1]}")
+            sys.exit()
 
         except ResponseException as e:
             print(f"{e.args[0]}. Is your praw.ini file well written?")
+            sys.exit()
 
         except ClientException as e:
             e = str(e).split("\n")
             print(f"{e[0]}. Please check your praw.ini file.")
+            sys.exit()
 
         except OAuthException:
             print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
+            sys.exit()
 
         except AttributeError:
             print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
-
+            sys.exit()
 
     def parse_content(self, elements):
         """Parse content, showing a short title or comment body, also creating a direct link, then call _show_table"""
