@@ -4,8 +4,9 @@ from main import Filter
 
 @click.group()
 @click.pass_context
-def cli(ctx):
-    ctx.obj = Filter()
+@click.option("--user")
+def cli(ctx, user):
+    ctx.obj = Filter(user) if user else Filter()
 
 
 @cli.command()
