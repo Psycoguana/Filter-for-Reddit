@@ -8,7 +8,7 @@ from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
 from praw.exceptions import ClientException
 from prawcore.exceptions import ResponseException, OAuthException
-from configparser import NoSectionError, ParsingError
+from configparser import DuplicateSectionError, NoSectionError, ParsingError
 
 
 # TODO: Improve menu
@@ -115,6 +115,12 @@ class Filter:
         except ParsingError as e:
             e = str(e).split("\n")
             print(f"The praw.ini file is not written correctly. An error was found in {e[1]}")
+            sys.exit()
+
+        except DuplicateSectionError as e:
+            print(
+                f"Error found on line {e.args[2]} on the configuration file praw.ini"
+                f"\nAre you trying to use two or more account with the username {e.args[0]}?")
             sys.exit()
 
         except ResponseException as e:
