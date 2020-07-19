@@ -1,18 +1,11 @@
 import re
-from rich import box
-from rich.progress import track
-from rich.console import Console
-from rich.table import Column, Table
-import click
-from typing import List
-from tabulate import tabulate
-from prawcore.exceptions import OAuthException
-from praw.models.reddit.submission import Submission
-from praw.models.reddit.comment import Comment
 import praw.exceptions
-from praw.models.reddit.base import RedditBase
+from rich import box
+from rich.console import Console
+from rich.table import Table
+from praw.models.reddit.comment import Comment
+from praw.models.reddit.submission import Submission
 
-# TODO: Rewrite get_saved, parse content, get_all.
 # TODO: Improve menu
 # TODO: Implement OAuth
 
@@ -41,23 +34,22 @@ MEDIA_CHOICES = """1. Images
 0. Return"""
 
 reddit = praw.Reddit('USER', user_agent='saved_reddit_script')
-try:
-    user = reddit.user.me()
-except OAuthException:
-    raise Exception("OAuthException: Wrong username or password")
 
-print(f"Hello {user}")
+
+# try:
+#     user = reddit.user.me()
+# except OAuthException:
+#     raise Exception("OAuthException: Wrong username or password")
+#
+# print(f"Hello {user}")
 
 
 class Filter:
 
     def __init__(self):
-        self.saved = ""
-
-    def initialize(self):
         self.saved = self.get_saved()
 
-    def main(self):
+    def main_menu(self):
         user_input = input(CHOICES)
         saved = self.get_saved()
         print("")
@@ -116,61 +108,53 @@ class Filter:
         self.parse_content(matched)
 
     def get_saved(self):
-        """Get every saved elements and separate posts from comments"""
-        # Change limit to 100 or none
-        saved: List[RedditBase] = reddit.user.me().saved(limit=LIMIT)
-        return saved
+        """Returns every saved element as a list of RedditBase"""
+        return reddit.user.me().saved(limit=LIMIT)
 
     def parse_content(self, elements):
+        """Parse content, showing a short title or comment body, also creating a direct link, then call _show_table"""
         table_data = []
-        rlink = "https://www.reddit.com/"
+        rlink = "https://www.reddit.com"
 
-        i = 1
-        for element in elements:
+        for i, element in enumerate(elements):
             if type(element) == Submission:
-                sub = f"r/{element.subreddit}"
-                title = element.title[0:134] if len(
-                    element.title) > 135 else element.title
-                link = rlink + element.id
-                title = f"[link={link}]{title}[\link]"
-                table_data.append([sub, title, link])
+                title = element.title[0:134] if len(element.title) > 135 else element.title
+                link = rlink + "/" + element.id
             else:
-                sub = f"r/{element.subreddit}"
-                title = element.body[0:134] + \
-                        "..." if len(element.body) > 135 else element.body
+                title = element.body[0:200] + "..." if len(element.body) > 201 else element.body
                 # Makes comments a little bit tidier by removing new lines.
                 title = " ".join(title.split())
-                # TODO: Fix link
-                # link = f"{rlink}r/{sub}/comments/{element}/-/{element.id}"
-                link = "https://www.reddit.com" + str(element.permalink)
-                table_data.append([sub, title, link])
-            i += 1
+                link = rlink + str(element.permalink)
+
+            # These lines embed the link so rich can make a clickable text.
+            sub = f"r/{element.subreddit}"
+            sub = f"[link={rlink}/{sub}]{sub}[\link]"
+            title = f"[link={link}]{title}[\link]"
+
+            table_data.append([sub, title])
+
         if table_data:
             self._show_table(table_data)
         else:
             print("There was nothing found for this query :/")
 
     def _show_table(self, table_data):
-        table = Table(title="Matched Posts", show_header=True, header_style="bold red", box=box.HEAVY)
+        table = Table(header_style="bold red", box=box.ROUNDED)
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
-        table.add_column("Links", justify='right')
+
         for i, _ in enumerate(table_data):
             table.add_row(*table_data[i])
+
         Console().print(table)
 
     def get_all(self):
-        all = []
-        for element in self.saved:
-            all.append(element)
-        return all
+        """Just return every saved item, no filter applied."""
+        return [x for x in self.saved]
 
     def get_self(self):
-        print("get_self() called")
         self_posts = []
-        i = 0
         for element in self.saved:
-            i += 1
             if type(element) == Submission and element.is_self:
                 self_posts.append(element)
 
@@ -181,12 +165,10 @@ class Filter:
         for element in self.saved:
             if element.over_18:
                 nsfw.append(element)
-            return nsfw
+        return nsfw
 
     def get_subreddit(self, subreddits):
-        print("get_subreddit() called")
         matched_subreddits = []
-
         for element in self.saved:
             if str(element.subreddit).lower() in subreddits:
                 matched_subreddits.append(element)
@@ -194,7 +176,7 @@ class Filter:
         return matched_subreddits
 
     def get_media(self, media_type):
-        """Get media, it can be video, gif or img"""
+        """Get media, it can be video, gif or image"""
         # Here we set the pattern according to the type of file we want
         if media_type == "img":
             pattern = "i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
@@ -241,7 +223,6 @@ class Filter:
         return entered_subs
 
     def get_posts(self):
-        click.echo("get_posts called")
         posts = []
         for element in self.saved:
             if type(element) == Submission:
@@ -256,6 +237,7 @@ class Filter:
         return comments
 
     def search_posts(self, query):
+        # TODO: Improve search, things like "tip" don't show up.
         posts = self.get_posts()
         matched_posts = []
 
@@ -272,45 +254,3 @@ class Filter:
             if query.lower() in str(comment.body).lower():
                 matched_comments.append(comment)
         return matched_comments
-
-
-@click.group()
-def cli():
-    pass
-
-
-@cli.command()
-def show_all():
-    a = Filter.get_all()
-    Filter.parse_content(a)
-
-
-@cli.command()
-@click.argument('query')
-def search_post(query):
-    matched = Filter.search_posts(query)
-    Filter.parse_content(matched)
-
-@cli.command()
-def get_posts():
-    matched = Filter.get_posts()
-    Filter.parse_content(matched)
-
-
-@cli.command()
-def get_comments():
-    matched = Filter.get_comments()
-    Filter.parse_content(matched)
-
-
-if __name__ == '__main__':
-    # TODO: Think how not to call get_saved if im just passing the --help flag
-    Filter = Filter()
-    Filter.initialize()
-    cli()
-
-
-
-
-    # matched = search_posts(saved)
-    # # matched = get_comments(saved)
