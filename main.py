@@ -5,6 +5,9 @@ from rich.console import Console
 from rich.table import Table
 from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
+from praw.exceptions import ClientException
+from prawcore.exceptions import ResponseException, OAuthException
+from configparser import NoSectionError, ParsingError
 
 # TODO: Improve menu
 # TODO: Implement OAuth
@@ -33,20 +36,11 @@ MEDIA_CHOICES = """1. Images
 
 0. Return"""
 
-reddit = praw.Reddit('USER', user_agent='saved_reddit_script')
-
-
-# try:
-#     user = reddit.user.me()
-# except OAuthException:
-#     raise Exception("OAuthException: Wrong username or password")
-#
-# print(f"Hello {user}")
-
 
 class Filter:
 
-    def __init__(self):
+    def __init__(self, user='USER'):
+        self.user = user
         self.saved = self.get_saved()
 
     def main_menu(self):
@@ -109,7 +103,29 @@ class Filter:
 
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
-        return reddit.user.me().saved(limit=LIMIT)
+        try:
+            reddit = praw.Reddit(self.user, user_agent='saved_reddit_script')
+            return reddit.user.me().saved(limit=LIMIT)
+        except NoSectionError:
+            print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
+
+        except ParsingError as e:
+            e = str(e).split("\n")
+            print(f"The praw.ini file is not written correctly. An error was found in {e[1]}")
+
+        except ResponseException as e:
+            print(f"{e.args[0]}. Is your praw.ini file well written?")
+
+        except ClientException as e:
+            e = str(e).split("\n")
+            print(f"{e[0]}. Please check your praw.ini file.")
+
+        except OAuthException:
+            print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
+
+        except AttributeError:
+            print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
+
 
     def parse_content(self, elements):
         """Parse content, showing a short title or comment body, also creating a direct link, then call _show_table"""
@@ -179,14 +195,14 @@ class Filter:
         """Get media, it can be video, gif or image"""
         # Here we set the pattern according to the type of file we want
         if media_type == "img":
-            pattern = "i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
+            pattern = r"i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
         elif media_type == "gif":
             # i.imgur.com/[ANYTHING].gifv
             # i.redd.it/[ANYTHING].gif
-            pattern = "i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
+            pattern = r"i.redd.it\/.+\.gif|i.imgur\.com\/.+\.gifv|gfycat"
         elif media_type == "vid":
             # This could be improved, don't know how tho
-            pattern = "pornhub.com|v\.redd\.it|youtube.com|vimeo"
+            pattern = r"pornhub.com|v\.redd\.it|youtube.com|vimeo"
         else:  # TODO: Maybe raise an error?
             pattern = ".+"
 
@@ -205,7 +221,7 @@ class Filter:
         # aka External sites that don't belong in media.
         # I suck at regex, so if anyone wants to improve this in any way, I'm up for it :)
 
-        pattern = "^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
+        pattern = r"^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
 
         for element in self.saved:
             if type(element) == Submission:
@@ -254,3 +270,7 @@ class Filter:
             if query.lower() in str(comment.body).lower():
                 matched_comments.append(comment)
         return matched_comments
+
+
+if __name__ == '__main__':
+    Filter()
