@@ -1,4 +1,5 @@
 import re
+import os
 import sys
 import praw.exceptions
 from rich import box
@@ -44,8 +45,11 @@ class Filter:
         self.user = user
         self.saved = self.get_saved()
 
+    def _clear_screen(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     def main_menu(self):
+        self._clear_screen()
         user_input = input(CHOICES)
         print("")
 
@@ -186,6 +190,7 @@ class Filter:
         for i, _ in enumerate(table_data):
             table.add_row(*table_data[i])
 
+        self._clear_screen()
         Console().print(table)
 
     def get_all(self):
