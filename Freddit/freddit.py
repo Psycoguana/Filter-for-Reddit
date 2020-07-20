@@ -1,5 +1,6 @@
+import os
+import pathlib
 import click
-from auth import login
 from filter import Filter
 
 
@@ -89,4 +90,6 @@ def get_external_links(ctx: Filter):
 
 
 if __name__ == '__main__':
+    script_dir = pathlib.Path(__file__).parent.absolute()
+    os.chdir(script_dir)
     cli()

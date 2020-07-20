@@ -44,6 +44,7 @@ class Filter:
         self.user = user
         self.saved = self.get_saved()
 
+
     def main_menu(self):
         user_input = input(CHOICES)
         saved = self.get_saved()
@@ -51,39 +52,39 @@ class Filter:
 
         while user_input != '0':
             if user_input == '1':
-                matched = get_all(saved)
-                parse_content(matched)
+                matched = self.get_all()
+                self.parse_content(matched)
             elif user_input == '2':
-                matched = get_self(saved)
-                parse_content(matched)
+                matched = self.get_self()
+                self.parse_content(matched)
             elif user_input == '3':
-                media_menu(saved)
+                self.media_menu(saved)
             elif user_input == '4':
-                subs = ask_for_subreddits()
-                matched = get_subreddit(saved, subs)
-                parse_content(matched)
+                subs = self.ask_for_subreddits()
+                matched = self.get_subreddit(subs)
+                self.parse_content(matched)
             elif user_input == '5':
-                matched = get_nsfw(saved)
-                parse_content(matched)
+                matched = self.get_nsfw()
+                self.parse_content(matched)
             elif user_input == '6':
-                matched = get_posts(saved)
-                parse_content(matched)
+                matched = self.get_posts()
+                self.parse_content(matched)
             elif user_input == '7':
-                matched = get_comments(saved)
-                parse_content(matched)
+                matched = self.get_comments()
+                self.parse_content(matched)
             elif user_input == '8':
                 query = input("What do you want to search: ")
                 print("")
-                matched = search_posts(saved, query)
-                parse_content(matched)
+                matched = self.search_posts(query)
+                self.parse_content(matched)
             elif user_input == '9':
                 query = input("What do you want to search: ")
                 print("")
-                matched = search_comments(saved, query)
-                parse_content(matched)
+                matched = self.search_comments(query)
+                self.parse_content(matched)
             elif user_input == '10':
-                matched = get_external_links(saved)
-                parse_content(matched)
+                matched = self.get_external_links()
+                self.parse_content(matched)
             else:
                 print("Invalid choice")
             user_input = input(CHOICES)
@@ -106,6 +107,7 @@ class Filter:
         """Returns every saved element as a list of RedditBase"""
         try:
             reddit = praw.Reddit(self.user, user_agent='saved_reddit_script')
+            praw.reddit.Config.CONFIG
             return reddit.user.me().saved(limit=LIMIT)
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")

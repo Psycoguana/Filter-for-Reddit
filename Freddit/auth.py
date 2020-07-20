@@ -7,8 +7,10 @@ This tool can be used to conveniently create refresh tokens for later use with
 your web application OAuth2 credentials.
 
 """
+import pathlib
 import random
 import praw
+import os
 
 
 def login():
@@ -22,12 +24,16 @@ def login():
     )
     print("Put http://localhost:8080 in the redirect uri field and click create app")
 
-    client_id = input("Enter the client ID, it's the line just under Personal use script at the top: ")
+    print("\nEnter the client ID, it's the line just under Personal use script at the top: ", end='')
+    client_id = input()
 
-    client_secret = input("Enter the client secret, it's the line next to secret: ")
+    print("Enter the client secret, it's the line next to secret: ", end='')
+    client_secret = input()
 
-    username = input("Enter your username: ")
-    password = input("Now enter your password: ")
+    print("Enter your username: ", end='')
+    username = input()
+    print("Now enter your password: ", end='')
+    password = input()
 
     reddit = praw.Reddit(
         client_id=client_id,
@@ -47,14 +53,21 @@ client_secret={client_secret}
 username={username}
 password={password}\n
 """
-    print("That's it, everything's been pasted in the praw.ini file"
+    print("\n\nThat's it, everything's been pasted in the praw.ini file"
           "\nIf this is your second account, please edit the [USER] in the file with something else")
     add_to_file(user_info)
     return 0
 
 
 def add_to_file(string):
-    with open('../praw.ini', 'a') as f:
+    """Append the user config to praw.ini config file"""
+
+    # This sets the Current Working Directory to wherever the script is located.
+    # Ensuring the script gets the correct path of praw.ini no matter from where it's called.
+    script_dir = pathlib.Path(__file__).parent.absolute()
+    os.chdir(script_dir)
+
+    with open('./praw.ini', 'a') as f:
         f.write("\n")
         f.write(string)
 
