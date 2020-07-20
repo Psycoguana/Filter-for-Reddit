@@ -11,7 +11,7 @@ import random
 import praw
 
 
-def main():
+def login():
     print(
         "Go here while logged into the account you want to create a token for: "
         "https://www.reddit.com/prefs/apps/"
@@ -54,10 +54,10 @@ password={password}\n
 
 
 def add_to_file(string):
-    with open('praw.ini', 'a') as f:
+    with open('../praw.ini', 'a') as f:
         f.write("\n")
         f.write(string)
 
 
 if __name__ == "__main__":
-    main()
+    login()

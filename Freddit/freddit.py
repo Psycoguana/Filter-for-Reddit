@@ -1,5 +1,6 @@
 import click
-from main import Filter
+from auth import login
+from filter import Filter
 
 
 @click.group()

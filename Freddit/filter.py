@@ -12,7 +12,6 @@ from configparser import DuplicateSectionError, NoSectionError, ParsingError
 
 
 # TODO: Improve menu
-# TODO: Implement OAuth
 
 LIMIT = 50
 
