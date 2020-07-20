@@ -47,7 +47,6 @@ class Filter:
 
     def main_menu(self):
         user_input = input(CHOICES)
-        saved = self.get_saved()
         print("")
 
         while user_input != '0':
@@ -58,7 +57,7 @@ class Filter:
                 matched = self.get_self()
                 self.parse_content(matched)
             elif user_input == '3':
-                self.media_menu(saved)
+                self.media_menu()
             elif user_input == '4':
                 subs = self.ask_for_subreddits()
                 matched = self.get_subreddit(subs)
@@ -73,12 +72,14 @@ class Filter:
                 matched = self.get_comments()
                 self.parse_content(matched)
             elif user_input == '8':
-                query = input("What do you want to search: ")
+                print("What do you want to search: ", end='')
+                query = input()
                 print("")
                 matched = self.search_posts(query)
                 self.parse_content(matched)
             elif user_input == '9':
-                query = input("What do you want to search: ")
+                print("What do you want to search: ", end='')
+                query = input()
                 print("")
                 matched = self.search_comments(query)
                 self.parse_content(matched)
@@ -87,9 +88,19 @@ class Filter:
                 self.parse_content(matched)
             else:
                 print("Invalid choice")
-            user_input = input(CHOICES)
+            sys.exit(0)
 
-    def media_menu(self, elements):
+    def ask_for_subreddits(self):
+        """ Asks for subreddits, splits with a + sign and returns a list """
+        entered_subs = []
+        print("Input your subs (wtf, python): ")
+        user_input = input().split(',')
+
+        for sub in user_input:
+            entered_subs.append(sub.strip())
+        return entered_subs
+
+    def media_menu(self):
         user_input = input(MEDIA_CHOICES)
         param = ""
         if user_input == '1':
@@ -100,14 +111,13 @@ class Filter:
             param = "vid"
         elif user_input == '4':
             param = "all"
-        matched = self.get_media(elements, param)
+        matched = self.get_media(param)
         self.parse_content(matched)
 
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
         try:
             reddit = praw.Reddit(self.user, user_agent='saved_reddit_script')
-            praw.reddit.Config.CONFIG
             return reddit.user.me().saved(limit=LIMIT)
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
@@ -242,15 +252,6 @@ class Filter:
                 if re.search(pattern, element.url):
                     posts.append(element)
         return posts
-
-    def ask_for_subreddits(self):
-        """ Asks for subreddits, splits with a + sign and returns a list """
-        entered_subs = []
-        user_input = input("Input your subs (wtf+python): ").split('+')
-        # TODO: Replace this for loop with a list comprehension if possible
-        for sub in user_input:
-            entered_subs.append(sub)
-        return entered_subs
 
     def get_posts(self):
         posts = []
