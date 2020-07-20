@@ -18,23 +18,23 @@ LIMIT = 50
 
 # TODO: External Links.
 CHOICES = """What do you want to get?
-1. All.
-2. Self.
-3. Media.
-4. Specific subreddits.
-5. NSFW.
-6. Just Posts.
-7. Just Comments.
-8. Search Post's Titles
-9. Search in Comments
-10. External Websites
+1. Get every Posts and Comment.
+2. Get every Post.
+3. Get every Comment.
+4. Get Text-Only Posts.
+5. Get Posts with Media.
+6. Filter specific subreddits.
+7. Search in Post's Titles.
+8. Search in Comments.
+9. Filter NSFW.
+10. Posts with external websites.
 
-0. Exit.
-"""
+0. Exit.\n\n"""
+
 MEDIA_CHOICES = """1. Images
 2. Gifs
 3. Videos
-4. All of the above
+4. All of the above (Not working...)
 
 0. Return"""
 
@@ -51,47 +51,41 @@ class Filter:
     def main_menu(self):
         self._clear_screen()
         user_input = input(CHOICES)
+        matched = []
         print("")
 
         while user_input != '0':
             if user_input == '1':
                 matched = self.get_all()
-                self.parse_content(matched)
             elif user_input == '2':
-                matched = self.get_self()
-                self.parse_content(matched)
+                matched = self.get_posts()
             elif user_input == '3':
-                self.media_menu()
+                matched = self.get_comments()
             elif user_input == '4':
+                matched = self.get_self()
+            elif user_input == '5':
+                matched = self.media_menu()
+            elif user_input == '6':
                 subs = self.ask_for_subreddits()
                 matched = self.get_subreddit(subs)
-                self.parse_content(matched)
-            elif user_input == '5':
-                matched = self.get_nsfw()
-                self.parse_content(matched)
-            elif user_input == '6':
-                matched = self.get_posts()
-                self.parse_content(matched)
             elif user_input == '7':
-                matched = self.get_comments()
-                self.parse_content(matched)
-            elif user_input == '8':
                 print("What do you want to search: ", end='')
                 query = input()
                 print("")
                 matched = self.search_posts(query)
-                self.parse_content(matched)
-            elif user_input == '9':
+            elif user_input == '8':
                 print("What do you want to search: ", end='')
                 query = input()
                 print("")
                 matched = self.search_comments(query)
-                self.parse_content(matched)
+            elif user_input == '9':
+                matched = self.get_nsfw()
             elif user_input == '10':
                 matched = self.get_external_links()
-                self.parse_content(matched)
             else:
                 print("Invalid choice")
+            
+            self.parse_content(matched)
             sys.exit(0)
 
     def ask_for_subreddits(self):
@@ -115,8 +109,7 @@ class Filter:
             param = "vid"
         elif user_input == '4':
             param = "all"
-        matched = self.get_media(param)
-        self.parse_content(matched)
+        return self.get_media(param)        
 
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
