@@ -115,7 +115,7 @@ class Filter:
         """Returns every saved element as a list of RedditBase"""
         try:
             reddit = praw.Reddit(self.user, user_agent='saved_reddit_script')
-            print("Getting saved")
+            print("Getting saved elements...")
             return reddit.user.me().saved(limit=LIMIT)
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
