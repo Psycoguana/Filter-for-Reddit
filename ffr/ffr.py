@@ -64,7 +64,7 @@ def subreddits(ctx: Filter, subs):
 @cli.command(help="Filter posts containing a certain word.")
 @click.argument('query', required=True)
 @click.pass_obj
-def search_post(ctx: Filter, query):
+def search_posts(ctx: Filter, query):
     print(f"Searching {query} in saved posts...")
     matched = ctx.search_posts(query)
     ctx.parse_content(matched)
@@ -73,7 +73,7 @@ def search_post(ctx: Filter, query):
 @cli.command(help="Filter comments containing a certain word.")
 @click.argument('query', required=True)
 @click.pass_obj
-def search_comment(ctx: Filter, query):
+def search_comments(ctx: Filter, query):
     print(f"Searching {query} in saved comments...")
     matched = ctx.search_comments(query)
     ctx.parse_content(matched)
