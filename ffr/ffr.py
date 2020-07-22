@@ -7,9 +7,18 @@ from filter import Filter
 
 @click.group()
 @click.pass_context
+@click.option("-l", "--limit", type=int, help="Specify the maximum amount of elements to retrieve")
 @click.option("-u", "--user", help="Specify which user to use.")
-def cli(ctx, user):
-    ctx.obj = Filter(user) if user else Filter()
+def cli(ctx, user, limit):
+    
+    if user and limit:
+        ctx.obj = Filter(user, limit)
+    elif user:
+        ctx.obj = Filter(user=user)
+    elif limit:
+        ctx.obj = Filter(limit=limit)
+    else:
+        ctx.obj = Filter()
 
 
 @cli.command(help="Get everything that's been saved.")

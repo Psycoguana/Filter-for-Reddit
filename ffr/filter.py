@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import praw.exceptions
+import logging
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -13,9 +14,6 @@ from configparser import DuplicateSectionError, NoSectionError, ParsingError
 
 
 # TODO: Improve menu
-
-LIMIT = 50
-
 # TODO: External Links.
 CHOICES = """What do you want to get?
 1. Get every Posts and Comment.
@@ -41,9 +39,11 @@ MEDIA_CHOICES = """1. Images
 
 class Filter:
 
-    def __init__(self, user='USER'):
+    def __init__(self, user='USER', limit=100):
         self.user = user
+        self.limit = limit
         self.saved = self.get_saved()
+        print(limit)
 
     def _clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -116,7 +116,7 @@ class Filter:
         try:
             reddit = praw.Reddit(self.user, user_agent='filter_for_reddit')
             print("Getting saved elements...")
-            return reddit.user.me().saved(limit=LIMIT)
+            return reddit.user.me().saved(limit=self.limit)
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
             sys.exit()
@@ -287,4 +287,15 @@ class Filter:
 
 
 if __name__ == '__main__':
-    Filter()
+    # Filter()
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    for logger_name in ("praw", "prawcore"):
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
+    filter = Filter()
+    posts = filter.get_posts()
+    for post in posts:
+        print(post.comments.list())
