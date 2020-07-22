@@ -43,7 +43,6 @@ class Filter:
         self.user = user
         self.limit = limit
         self.saved = self.get_saved()
-        print(limit)
 
     def _clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -169,7 +168,7 @@ class Filter:
             sub = f"[link={rlink}/{sub}]{sub}[\link]"
             title = f"[link={link}]{title}[\link]"
 
-            table_data.append([sub, title])
+            table_data.append([sub, title, link])
 
         if table_data:
             self._show_table(table_data)
@@ -180,9 +179,14 @@ class Filter:
         table = Table(header_style="bold red", box=box.ROUNDED)
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
+        if os.name == 'nt': table.add_column("Links", justify='left')
+
 
         for i, _ in enumerate(table_data):
-            table.add_row(*table_data[i])
+            if os.name == 'nt':
+                table.add_row(*table_data[i])
+            else:
+                 table.add_row(*table_data[i][0:2])
 
         self._clear_screen()
         Console().print(table)
