@@ -114,7 +114,7 @@ class Filter:
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
         try:
-            reddit = praw.Reddit(self.user, user_agent='saved_reddit_script')
+            reddit = praw.Reddit(self.user, user_agent='filter_for_reddit')
             print("Getting saved elements...")
             return reddit.user.me().saved(limit=LIMIT)
         except NoSectionError:
