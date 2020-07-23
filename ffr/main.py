@@ -3,6 +3,7 @@ import os
 import pathlib
 import click
 from ffr.filter import Filter
+from ffr.login import login
 
 
 @click.group()
@@ -112,6 +113,8 @@ def main():
 
     if len(sys.argv) == 1:
         Filter().main_menu()
+    elif sys.argv[1] == "login":
+        login() 
     else:
         cli()
 
