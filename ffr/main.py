@@ -1,8 +1,8 @@
-import os
 import sys
+import os
 import pathlib
 import click
-from filter import Filter
+from ffr.filter import Filter
 
 
 @click.group()
@@ -104,7 +104,9 @@ def external_links(ctx: Filter):
     ctx.parse_content(matched)
 
 
-if __name__ == '__main__':
+def main():
+    # This sets the Current Working Directory to wherever the script is located.
+    # Ensuring the script gets the correct path of praw.ini no matter from where it's called.
     script_dir = pathlib.Path(__file__).parent.absolute()
     os.chdir(script_dir)
 
@@ -112,3 +114,7 @@ if __name__ == '__main__':
         Filter().main_menu()
     else:
         cli()
+
+
+if __name__ == '__main__':
+    main()
