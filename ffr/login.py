@@ -7,10 +7,11 @@ This tool can be used to conveniently create refresh tokens for later use with
 your web application OAuth2 credentials.
 
 """
+import os
 import pathlib
 import random
+
 import praw
-import os
 
 
 def login():

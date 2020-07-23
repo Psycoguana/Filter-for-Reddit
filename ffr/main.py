@@ -1,7 +1,9 @@
-import sys
 import os
 import pathlib
+import sys
+
 import click
+
 from ffr.filter import Filter
 from ffr.login import login
 
@@ -37,6 +39,7 @@ def posts(ctx: Filter):
     matched = ctx.get_posts()
     ctx.parse_content(matched)
 
+
 @cli.command(help="Get every saved comment.")
 @click.pass_obj
 def comments(ctx: Filter):
@@ -45,7 +48,7 @@ def comments(ctx: Filter):
     ctx.parse_content(matched)
 
 
-@cli.command(help="Get every saved post that only containts text.")
+@cli.command(help="Get every saved post that only contains text.")
 @click.pass_obj
 def text_only(ctx: Filter):
     print("Filtering only-text posts...")
@@ -114,7 +117,7 @@ def main():
     if len(sys.argv) == 1:
         Filter().main_menu()
     elif sys.argv[1] == "login":
-        login() 
+        login()
     else:
         cli()
 

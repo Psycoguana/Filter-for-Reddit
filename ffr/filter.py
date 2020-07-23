@@ -1,20 +1,19 @@
-import re
-import os
-import sys
-import praw.exceptions
 import logging
+import os
+import re
+import sys
+from configparser import DuplicateSectionError, NoSectionError, ParsingError
+
+import praw.exceptions
+from praw.exceptions import ClientException
+from praw.models.reddit.comment import Comment
+from praw.models.reddit.submission import Submission
+from prawcore.exceptions import ResponseException, OAuthException
 from rich import box
 from rich.console import Console
 from rich.table import Table
-from praw.models.reddit.comment import Comment
-from praw.models.reddit.submission import Submission
-from praw.exceptions import ClientException
-from prawcore.exceptions import ResponseException, OAuthException
-from configparser import DuplicateSectionError, NoSectionError, ParsingError
-
 
 # TODO: Improve menu
-# TODO: External Links.
 CHOICES = """What do you want to get?
 1. Get every Posts and Comment.
 2. Get every Post.
@@ -44,7 +43,8 @@ class Filter:
         self.limit = limit
         self.saved = self.get_saved()
 
-    def _clear_screen(self):
+    @staticmethod
+    def _clear_screen():
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def main_menu(self):
@@ -83,11 +83,12 @@ class Filter:
                 matched = self.get_external_links()
             else:
                 print("Invalid choice")
-            
+
             self.parse_content(matched)
             sys.exit(0)
 
-    def ask_for_subreddits(self):
+    @staticmethod
+    def ask_for_subreddits():
         """ Asks for subreddits, splits with a + sign and returns a list """
         entered_subs = []
         print("Input your subs (wtf, python): ")
@@ -108,7 +109,7 @@ class Filter:
             param = "vid"
         elif user_input == '4':
             param = "all"
-        return self.get_media(param)        
+        return self.get_media(param)
 
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
@@ -181,12 +182,11 @@ class Filter:
         table.add_column("Posts and Comments", justify='center')
         if os.name == 'nt': table.add_column("Links", justify='left')
 
-
         for i, _ in enumerate(table_data):
             if os.name == 'nt':
                 table.add_row(*table_data[i])
             else:
-                 table.add_row(*table_data[i][0:2])
+                table.add_row(*table_data[i][0:2])
 
         self._clear_screen()
         Console().print(table)
@@ -291,7 +291,6 @@ class Filter:
 
 
 if __name__ == '__main__':
-    # Filter()
     handler = logging.StreamHandler()
     handler.setLevel(logging.DEBUG)
     for logger_name in ("praw", "prawcore"):
@@ -299,7 +298,4 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)
 
-    filter = Filter()
-    posts = filter.get_posts()
-    for post in posts:
-        print(post.comments.list())
+    Filter()
