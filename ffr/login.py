@@ -8,7 +8,7 @@ your web application OAuth2 credentials.
 
 """
 import os
-import pathlib
+import sys
 import random
 
 import praw
@@ -63,15 +63,21 @@ password={password}\n
 def add_to_file(string):
     """Append the user config to praw.ini config file"""
 
-    # This sets the Current Working Directory to wherever the script is located.
-    # Ensuring the script gets the correct path of praw.ini no matter from where it's called.
-    script_dir = pathlib.Path(__file__).parent.absolute()
-    os.chdir(script_dir)
+    # Borrowed from https://github.com/praw-dev/praw/blob/973dc8a9471a0c05e88dde9de3463b3863e6eecc/praw/settings.py#L31
+    if 'APPDATA' in os.environ:  # Windows
+        os_config_path = os.environ['APPDATA']
+    elif 'XDG_CONFIG_HOME' in os.environ:  # Modern Linux
+        os_config_path = os.environ['XDG_CONFIG_HOME']
+    elif 'HOME' in os.environ:  # Legacy Linux
+        os_config_path = os.path.join(os.environ['HOME'], '.config')
+    else:
+        os_config_path = os.path.dirname(sys.modules[__name__].__file__)
 
-    with open('./praw.ini', 'a') as f:
+    dst = os.path.join(os_config_path, 'praw.ini')
+    with open(dst, 'a') as f:
         f.write("\n")
         f.write(string)
 
 
 if __name__ == "__main__":
-    login()
+    add_to_file("asd")
