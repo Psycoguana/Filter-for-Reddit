@@ -10,6 +10,7 @@ your web application OAuth2 credentials.
 import os
 import sys
 import random
+import configparser
 
 import praw
 
@@ -48,21 +49,32 @@ def login():
     url = reddit.auth.url(["identity"], state, "permanent")
     print("\nNow open this url in your browser: " + url)
 
-    user_info = f"""[USER]
+    praw_section = 'USER' if is_new_user() else username
+
+    user_info = f"""[{praw_section}]
 client_id={client_id}
 client_secret={client_secret}
 username={username}
 password={password}\n
 """
     print("\n\nThat's it, everything's been pasted in the praw.ini file"
-          "\nIf this is your second account, please edit the [USER] in the file with something else")
-    add_to_file(user_info)
+          "\nIf this is your second account, you'll have to specify the user with the --user flag.")
+    
+    dst = get_praw_conf()
+    add_to_file(dst, user_info)
     return 0
 
 
-def add_to_file(string):
+def add_to_file(dst, string):
     """Append the user config to praw.ini config file"""
+    with open(dst, 'a') as f:
+        f.write(string)
+        f.write("\n")
 
+
+def get_praw_conf():
+    """Returns the path to the praw.ini config file"""
+    
     # Borrowed from https://github.com/praw-dev/praw/blob/973dc8a9471a0c05e88dde9de3463b3863e6eecc/praw/settings.py#L31
     if 'APPDATA' in os.environ:  # Windows
         os_config_path = os.environ['APPDATA']
@@ -72,12 +84,19 @@ def add_to_file(string):
         os_config_path = os.path.join(os.environ['HOME'], '.config')
     else:
         os_config_path = os.path.dirname(sys.modules[__name__].__file__)
+    
+    return os.path.join(os_config_path, 'praw.ini')
 
-    dst = os.path.join(os_config_path, 'praw.ini')
-    with open(dst, 'a') as f:
-        f.write("\n")
-        f.write(string)
+def is_new_user():
+    """Return True if there is no section in the praw.ini file
+    with a USER section"""
+    praw_path = get_praw_conf()
+    config = configparser.ConfigParser()
+    config.read(praw_path)
+    sections = config.sections()
+
+    return False if 'USER' in sections else True
 
 
 if __name__ == "__main__":
-    add_to_file("asd")
+    login()
