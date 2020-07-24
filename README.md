@@ -1,14 +1,31 @@
-# **Filter for Reddit**
+<center>
+<h1 align="center">Filter for Reddit</h1>
+
+<h4 align="center">Easily filter your saved reddit posts and commments</h4>
+  <sub>Made with ❤ and tears by
+  <a href="https://www.reddit.com/user/Psicoguana">Psicoguana</a>
+  </sub>
+  <br>
+  <br>
+    <a href="https://badge.fury.io/py/ffr"><img src="https://badge.fury.io/py/ffr.svg" alt="PyPI version" height="18"></a>
+    <a href="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit"><img src="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit.svg" alt="Wakatime" height="18"></a>
+
+</center>
+
+<br>
+
+# 💬 About:
+
 
 Did you ever searched for random post or comment you saved in Reddit months ago? Maybe it belonged to a certain subreddit, was it NSFW? It definitely linked to some weird page no one heard of before...
 
 
-What a hassle, besides having to pay attention to each and every post you have to scroll a do several Ctrl+F.
+What a hassle, besides having to pay attention to each and every post you saved, you have to scroll and do several Ctrl+F.
 
 I hated that, so I created **Filter for Reddit** or `ffr` for short.
 
 
-# Features:
+# ✨ Features:
 
 * Get every saved element (post or comment).
 * Get every post.
@@ -26,13 +43,13 @@ I hated that, so I created **Filter for Reddit** or `ffr` for short.
 * Specify maximum amount of elements to retrieve (Not currently supported by the menu).
 
 
-# Install:
+# 📦 Install:
 You can easily install `ffr` with pip:
 ```
 pip3 install ffr
 ```
 
-# Setup:
+# 🔧 Setup:
 First you'll need to login. Reddit requires that you create a _client_id_ and a _client_secret_. For that I borrowed and edited a [script from Praw](https://praw.readthedocs.io/en/latest/tutorials/refresh_token.html#refresh-token).
 
 There are two way of doing this, you can either create the file manually or you can use the login command.
@@ -57,13 +74,13 @@ Assuming typical operating system installations and the username foobar the path
 * **OS X / Linux:** /home/foobar/.config/praw.ini
 
 
-_**BE VERY CAREFUL WITH THIS FILE, IT CONTAINS ALL YOUR REDDIT ACCOUNT'S INFO.**_
+⚠️ _**BE VERY CAREFUL WITH THIS FILE, IT CONTAINS ALL YOUR REDDIT ACCOUNT'S INFO.**_ ⚠️
 
 
 &nbsp;
 
 
-# Usage
+# 🖥️ Usage:
 
 You can either use it's (under development) menu by calling `ffr`:
 ![menu](img/menu.png)
@@ -109,7 +126,7 @@ It works pretty much the same as the search for posts. `ffr search-comments pyth
 ![search_comments](img/search_comments.gif)
 
 
-# Optional arguments
+# ➖➖ Optional arguments:
 ## There are two of these:
 
 * `--user, -u` -> **Specify which user you want to use.** If you have more than one user in your praw.ini file like here:
@@ -121,13 +138,13 @@ You'll have to specify it's name when running the script, if you want to search 
 * `--limit, -l` -> **Specify how many elements to retrieve.** By default, the script retrieves 100 elements, but if you feel like that's too much or too little just use this flag. For example:
  `ffr --limit=500 show-all` or `ffr -l 500 show-all`
 
- # Compatibility:
+ # 🔥 Compatibility:
  * **Linux:** Tested on Ubuntu 20.04.
  * **Windows:** Tested on Windows 10. The console doesn't support text with embedded hyperlinks, so it'll just print a third row with the links.
- * **Mac:** It should work too, but I don't have a Mac to test it :_
+ * **Mac:** It should work too, but I don't have a Mac to test it. If you try it, please let me know how it went 🙂
 
 
-# Dependencies:
+# 🧩 Dependencies:
 
 * [**Praw**](https://github.com/praw-dev/praw): to handle Reddit's API.
 * [**Rich**](https://github.com/willmcgugan/rich): to easily create a beautiful table.
@@ -136,9 +153,21 @@ You'll have to specify it's name when running the script, if you want to search 
 
 
 
-# TODO:
+# 🔖 TODO:
 - [x] ~~Create a Pypi package.~~
+- [ ] Create an exe package.
 - [ ] Support changing table colors.
 - [ ] Improve login script format.
 - [ ] Improve menu format.
 - [ ] You tell me...
+
+
+# 🗣️ Let me know!
+What you think about **Filter for Reddit**? Feel free to send me a [DM on Reddit!](https://www.reddit.com/message/compose/?to=Psicoguana) ✉️
+
+ Do you have any question or suggestion? Did you encounter any issue or found any bug? Feel free to open an issue and I'll check it ASAP 😉
+
+
+
+# 📃 License:
+[Mozilla Public License Version 2.0](LICENSE).
