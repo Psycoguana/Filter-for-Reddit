@@ -57,11 +57,12 @@ client_secret={client_secret}
 username={username}
 password={password}\n
 """
-    print("\n\nThat's it, everything's been pasted in the praw.ini file"
-          "\nIf this is your second account, you'll have to specify the user with the --user flag.")
     
     dst = get_praw_conf()
     add_to_file(dst, user_info)
+
+    print(f"\n\nThat's it, everything's been pasted in the praw.ini file.\nYou can find it in {dst}\n"
+        "\nIf this is your second account, you'll have to specify the user with the --user flag.")
     return 0
 
 
