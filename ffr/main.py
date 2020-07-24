@@ -5,7 +5,7 @@ import sys
 import click
 
 from ffr.filter import Filter
-from ffr.login import login
+from ffr.login import login as auth
 
 
 @click.group()
@@ -20,6 +20,9 @@ def cli(ctx, user, limit):
         ctx.obj = Filter(user=user)
     elif limit:
         ctx.obj = Filter(limit=limit)
+    elif ctx.invoked_subcommand == 'login':
+        # Does not create the Filter object when login, cause there's no credentials that can be used.
+        pass
     else:
         ctx.obj = Filter()
 
@@ -108,6 +111,11 @@ def external_links(ctx: Filter):
     ctx.parse_content(matched)
 
 
+@cli.command(help="Create Reddit credentials.")
+def login():
+    auth()
+
+
 def main():
     # This sets the Current Working Directory to wherever the script is located.
     # Ensuring the script gets the correct path of praw.ini no matter from where it's called.
@@ -116,8 +124,6 @@ def main():
 
     if len(sys.argv) == 1:
         Filter().main_menu()
-    elif sys.argv[1] == "login":
-        login()
     else:
         cli()
 
