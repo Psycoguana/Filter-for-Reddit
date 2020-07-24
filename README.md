@@ -1,18 +1,16 @@
-<center>
 <h1 align="center">Filter for Reddit</h1>
 
 <h4 align="center">Easily filter your saved reddit posts and commments</h4>
-  <sub>Made with ❤ and tears by
-  <a href="https://www.reddit.com/user/Psicoguana">Psicoguana</a>
-  </sub>
-  <br>
-  <br>
-    <a href="https://badge.fury.io/py/ffr"><img src="https://badge.fury.io/py/ffr.svg" alt="PyPI version" height="18"></a>
-    <a href="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit"><img src="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit.svg" alt="Wakatime" height="18"></a>
+  <p align="center">
+  <sub>Made with ❤ and tears by <a href="https://www.reddit.com/user/Psicoguana">Psicoguana</a></sub>
+  </p>
 
-</center>
+  <p align="center">
+  <a href="https://badge.fury.io/py/ffr"><img src="https://badge.fury.io/py/ffr.svg" alt="PyPI version" height="18"></a>
+  <a href="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit"><img src="https://wakatime.com/badge/github/Psycoguana/Filter-for-Reddit.svg" alt="Wakatime" height="18"></a>
+</p>
 
-<br>
+<br/>
 
 # 💬 About:
 
@@ -138,13 +136,13 @@ You'll have to specify it's name when running the script, if you want to search 
 * `--limit, -l` -> **Specify how many elements to retrieve.** By default, the script retrieves 100 elements, but if you feel like that's too much or too little just use this flag. For example:
  `ffr --limit=500 show-all` or `ffr -l 500 show-all`
 
- # 🔥 Compatibility:
+ # 🧩 Compatibility:
  * **Linux:** Tested on Ubuntu 20.04.
  * **Windows:** Tested on Windows 10. The console doesn't support text with embedded hyperlinks, so it'll just print a third row with the links.
  * **Mac:** It should work too, but I don't have a Mac to test it. If you try it, please let me know how it went 🙂
 
 
-# 🧩 Dependencies:
+# 📚 Dependencies:
 
 * [**Praw**](https://github.com/praw-dev/praw): to handle Reddit's API.
 * [**Rich**](https://github.com/willmcgugan/rich): to easily create a beautiful table.
