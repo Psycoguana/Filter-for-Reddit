@@ -153,16 +153,19 @@ class Filter:
         """Parse content, showing a short title or comment body, also creating a direct link, then call _show_table"""
         table_data = []
         rlink = "https://www.reddit.com"
+        slink = "https://redd.it"
 
         for i, element in enumerate(elements):
             if type(element) == Submission:
                 title = element.title[0:134] if len(element.title) > 135 else element.title
-                link = rlink + "/" + element.id
+                link = slink + "/" + element.id
             else:
                 title = element.body[0:200] + "..." if len(element.body) > 201 else element.body
                 # Makes comments a little bit tidier by removing new lines.
                 title = " ".join(title.split())
-                link = rlink + str(element.permalink)
+                # Creates a short link for comments. link_id is something like "t3_....", I remove the t3_
+                link = f"{rlink}/comments/{element.link_id[3:]}/_/{element.id}"
+                
 
             # These lines embed the link so rich can make a clickable text.
             sub = f"r/{element.subreddit}"
@@ -180,7 +183,7 @@ class Filter:
         table = Table(header_style="bold red", box=box.ROUNDED)
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
-        if os.name == 'nt': table.add_column("Links", justify='left')
+        if os.name == 'nt': table.add_column("Links", justify='left', no_wrap=True)
 
         for i, _ in enumerate(table_data):
             if os.name == 'nt':
