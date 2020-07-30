@@ -9,6 +9,7 @@ your web application OAuth2 credentials.
 """
 import os
 import sys
+import socket
 import random
 import configparser
 
@@ -46,9 +47,34 @@ def login():
 
     state = str(random.randint(0, 65000))
 
+    # Get oauth url
     url = reddit.auth.url(["identity"], state, "permanent")
     print("\nNow open this url in your browser: " + url)
 
+    # Open a socket and wait for a connection.
+    sys.stdout.flush()
+    client = receive_connection()
+    data = client.recv(1024).decode("utf-8")
+    param_tokens = data.split(" ", 2)[1].split("?", 1)[1].split("&")
+    params = {
+        key: value for (key, value) in [token.split("=") for token in param_tokens]
+    }
+
+    if state != params["state"]:
+        send_message(
+            client,
+            "State mismatch. Expected: {} Received: {}".format(state, params["state"]),
+        )
+        return 1
+    elif "error" in params:
+        send_message(client, params["error"])
+        return 1
+
+    send_message(client, "<h1>Perfect, now you can go close this tab and start using Filter for Reddit! &#128515</h1>")
+    return 0
+
+    
+    # Generate the praw.ini file with the provided information.
     praw_section = 'USER' if is_new_user() else username
 
     user_info = f"""[{praw_section}]
@@ -59,11 +85,32 @@ password={password}\n
 """
     
     dst = get_praw_conf()
+    # Write info into praw.ini.
     add_to_file(dst, user_info)
 
     print(f"\n\nThat's it, everything's been pasted in the praw.ini file.\nYou can find it in {dst}\n"
         "\nIf this is your second account, you'll have to specify the user with the --user flag.")
     return 0
+
+def receive_connection():
+    """Wait for and then return a connected socket..
+
+    Opens a TCP connection on port 8080, and waits for a single client.
+
+    """
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("localhost", 8080))
+    server.listen(1)
+    client = server.accept()[0]
+    server.close()
+    return client
+
+def send_message(client, message):
+    """Send message to client and close the connection."""
+    print(message)
+    client.send("HTTP/1.1 200 OK\r\n\r\n{}".format(message).encode("utf-8"))
+    client.close()
 
 
 def add_to_file(dst, string):
