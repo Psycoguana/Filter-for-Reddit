@@ -11,32 +11,33 @@ import os
 import sys
 import socket
 import random
+import webbrowser
 import configparser
+from time import sleep
 
 import praw
+from rich.console import Console
+from rich.markdown import Markdown
 
+console = Console()
 
 def login():
-    print(
+    console.print(Markdown("# Login"))
+    console.print(
         "Go here while logged into the account you want to create a token for: "
         "https://www.reddit.com/prefs/apps/"
-    )
-    print(
-        "Click the create an app button. Put something in the name field and select the"
+        "\nClick the create an app button. Put something in the name field and select the"
         " script radio button."
+        "\nPut http://localhost:8080 in the redirect uri field and click create app"
     )
-    print("Put http://localhost:8080 in the redirect uri field and click create app")
 
-    print("\nEnter the client ID, it's the line just under Personal use script at the top: ", end='')
-    client_id = input()
+    client_id = console.input("\n[indian_red][u]Enter the [bold]Client ID[/bold][/u][/indian_red], it's the line just under Personal use script at the top: ")
 
-    print("Enter the client secret, it's the line next to secret: ", end='')
-    client_secret = input()
+    client_secret = console.input("[indian_red][u]Enter the [bold]Client secret[/bold][/u][/indian_red], it's the line next to secret: ")
 
-    print("Enter your username: ", end='')
-    username = input()
-    print("Now enter your password: ", end='')
-    password = input()
+    username = console.input("[indian_red][u]Enter your [bold]Username[/bold][/u][/indian_red]: ")
+
+    password = console.input("[indian_red][u]Now enter your [bold]Password[/bold][/u][/indian_red]: ")
 
     reddit = praw.Reddit(
         client_id=client_id,
@@ -49,7 +50,11 @@ def login():
 
     # Get oauth url
     url = reddit.auth.url(["identity"], state, "permanent")
-    print("\nNow open this url in your browser: " + url)
+    sleep(3)
+    console.print(f"[indian_red]\nThe link to authorize this script will open in 3 seconds\nIf the url didn't open, please manually open this link[/indian_red]: " )
+    webbrowser.open(url)
+    # Printing the url with rich makes the terminal not recognize the entire url.
+    print(url)
 
     # Open a socket and wait for a connection.
     sys.stdout.flush()
@@ -70,26 +75,26 @@ def login():
         send_message(client, params["error"])
         return 1
 
-    send_message(client, "<h1>Perfect, now you can go close this tab and start using Filter for Reddit! &#128515</h1>")
-    return 0
-
     
     # Generate the praw.ini file with the provided information.
     praw_section = 'USER' if is_new_user() else username
 
-    user_info = f"""[{praw_section}]
-client_id={client_id}
-client_secret={client_secret}
-username={username}
-password={password}\n
-"""
+    user_info = f"[{praw_section}]\
+    \nclient_id={client_id}\
+    \nclient_secret={client_secret}\
+    \nusername={username}\
+    \npassword={password}\n"
     
     dst = get_praw_conf()
     # Write info into praw.ini.
     add_to_file(dst, user_info)
 
-    print(f"\n\nThat's it, everything's been pasted in the praw.ini file.\nYou can find it in {dst}\n"
-        "\nIf this is your second account, you'll have to specify the user with the --user flag.")
+    message = f"\n\nThat\'s it, everything has been pasted in the praw.ini file.\
+    \nYou can find it in [bold]{dst}[/bold]\
+    \nIf this is your second account, you'll have to specify the user with the --user flag."
+    console.print(message)
+
+    send_message(client, "<h1>Perfect, now you can go close this tab and start using Filter for Reddit! &#128515</h1>")
     return 0
 
 def receive_connection():
@@ -108,7 +113,6 @@ def receive_connection():
 
 def send_message(client, message):
     """Send message to client and close the connection."""
-    print(message)
     client.send("HTTP/1.1 200 OK\r\n\r\n{}".format(message).encode("utf-8"))
     client.close()
 
