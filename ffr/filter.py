@@ -10,6 +10,7 @@ from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
 from prawcore.exceptions import ResponseException, OAuthException
 from rich import box
+from rich.text import Text
 from rich.console import Console
 from rich.table import Table
 
@@ -157,10 +158,10 @@ class Filter:
 
         for i, element in enumerate(elements):
             if type(element) == Submission:
-                title = element.title[0:134] if len(element.title) > 135 else element.title
+                title = element.title
                 link = slink + "/" + element.id
             else:
-                title = element.body[0:200] + "..." if len(element.body) > 201 else element.body
+                title = element.body
                 # Makes comments a little bit tidier by removing new lines.
                 title = " ".join(title.split())
                 # Creates a short link for comments. link_id is something like "t3_....", I remove the t3_
@@ -170,9 +171,8 @@ class Filter:
             # These lines embed the link so rich can make a clickable text.
             sub = f"r/{element.subreddit}"
             sub = f"[link={rlink}/{sub}]{sub}[\link]"
-            title = f"[link={link}]{title}[\link]"
 
-            table_data.append([sub, title, link])
+            table_data.append([sub, Text(title, style=f"link {link}", no_wrap=True), link])
 
         if table_data:
             self._show_table(table_data)
@@ -180,7 +180,7 @@ class Filter:
             print("There was nothing found for this query :/")
 
     def _show_table(self, table_data):
-        table = Table(header_style="bold red", box=box.ROUNDED)
+        table = Table(header_style="bold red", show_lines=True, box=box.ROUNDED)
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
         if os.name == 'nt': table.add_column("Links", justify='left', no_wrap=True)
