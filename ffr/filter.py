@@ -119,18 +119,22 @@ class Filter:
             print("Getting saved elements...")
             return reddit.user.me().saved(limit=self.limit)
         except NoSectionError:
-            print("Please make sure the name of the praw.ini configuration exist, is not empty and written correctly.")
+            print("Please make sure the name of the praw.ini configuration \
+                exist, is not empty and written correctly.")
             sys.exit()
 
         except ParsingError as e:
             e = str(e).split("\n")
-            print(f"The praw.ini file is not written correctly. An error was found in {e[1]}")
+            print(f"The praw.ini file is not written correctly.\
+                  An error was found in {e[1]}")
             sys.exit()
 
         except DuplicateSectionError as e:
             print(
-                f"Error found on line {e.args[2]} on the configuration file praw.ini"
-                f"\nAre you trying to use two or more account with the username {e.args[0]}?")
+                f"Error found on line {e.args[2]} \
+                    on the configuration file praw.ini"
+                f"\nAre you trying to use two or more account\
+                     with the username {e.args[0]}?")
             sys.exit()
 
         except ResponseException as e:
@@ -143,15 +147,19 @@ class Filter:
             sys.exit()
 
         except OAuthException:
-            print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
+            print("Something went wrong while retrieving your saved elements.\
+                 Are your password and username correct?")
             sys.exit()
 
         except AttributeError:
-            print("Something went wrong while retrieving your saved elements. Are your password and username correct?")
+            print("Something went wrong while retrieving your saved elements.\
+                 Are your password and username correct?")
             sys.exit()
 
     def parse_content(self, elements):
-        """Parse content, showing a short title or comment body, also creating a direct link, then call _show_table"""
+        """Parse content, showing a short title or comment body,
+        also creating a direct link, then call _show_table"""
+
         table_data = []
         rlink = "https://www.reddit.com"
         slink = "https://redd.it"
@@ -164,15 +172,16 @@ class Filter:
                 title = element.body
                 # Makes comments a little bit tidier by removing new lines.
                 title = " ".join(title.split())
-                # Creates a short link for comments. link_id is something like "t3_....", I remove the t3_
+                # Creates a short link for comments.
+                # link_id is something like "t3_....", I remove the t3_
                 link = f"{rlink}/comments/{element.link_id[3:]}/_/{element.id}"
-                
 
             # These lines embed the link so rich can make a clickable text.
             sub = f"r/{element.subreddit}"
             sub = f"[link={rlink}/{sub}]{sub}[\link]"
 
-            table_data.append([sub, Text(title, style=f"link {link}", no_wrap=True), link])
+            table_data.append(
+                [sub, Text(title, style=f"link {link}", no_wrap=True), link])
 
         if table_data:
             self._show_table(table_data)
@@ -180,15 +189,19 @@ class Filter:
             print("There was nothing found for this query :/")
 
     def _show_table(self, table_data):
-        table = Table(header_style="bold", show_lines=True, box=box.ROUNDED, border_style="dark_red")
+        table = Table(header_style="bold", show_lines=True,
+                      box=box.ROUNDED, border_style="dark_red")
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
-        if os.name == 'nt': table.add_column("Links", justify='left', no_wrap=True)
+
+        if os.name == 'nt':
+            table.add_column("Links", justify='left', no_wrap=True)
 
         for i, _ in enumerate(table_data):
             if os.name == 'nt':
                 table.add_row(*table_data[i])
             else:
+                # If running on Windows, don't add the links to the table
                 table.add_row(*table_data[i][0:2])
 
         self._clear_screen()
@@ -247,9 +260,11 @@ class Filter:
 
     def get_external_links(self):
         posts = []
-        # This should match any website that is not: Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
+        # This should match any website that is not:
+        # Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
         # aka External sites that don't belong in media.
-        # I suck at regex, so if anyone wants to improve this in any way, I'm up for it :)
+        # I suck at regex,
+        # so if anyone wants to improve this in any way, I'm up for it :)
 
         pattern = r"^(?!(https?:\/\/)?(www\.)?((i\.|v\.)?(redd|imgur|reddit|gfycat|youtube|youtu|pornhub|vimeo)\.(com|it|net|gif|jpg|jpeg|png|be).+)).+$"
 
