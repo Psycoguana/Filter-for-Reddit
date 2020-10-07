@@ -39,7 +39,7 @@ MEDIA_CHOICES = """1. Images
 
 class Filter:
 
-    def __init__(self, user='USER', limit=100):
+    def __init__(self, user='USER', limit=500):
         self.user = user
         self.limit = limit
         self.saved = self.get_saved()
