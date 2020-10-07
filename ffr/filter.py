@@ -180,7 +180,7 @@ class Filter:
             print("There was nothing found for this query :/")
 
     def _show_table(self, table_data):
-        table = Table(header_style="bold red", show_lines=True, box=box.ROUNDED)
+        table = Table(header_style="bold", show_lines=True, box=box.ROUNDED, border_style="dark_red")
         table.add_column("Subreddits", justify='left')
         table.add_column("Posts and Comments", justify='center')
         if os.name == 'nt': table.add_column("Links", justify='left', no_wrap=True)
