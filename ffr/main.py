@@ -8,13 +8,15 @@ from ffr.filter import Filter
 from ffr.login import login as auth
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.pass_context
 @click.option("-l", "--limit", type=int, help="Specify the maximum amount of elements to retrieve")
 @click.option("-u", "--user", help="Specify which user to use.")
 def cli(ctx, user, limit):
-    
-    if user and limit:
+
+    if ctx.invoked_subcommand is None:
+        Filter().main_menu()
+    elif user and limit:
         ctx.obj = Filter(user, limit)
     elif user:
         ctx.obj = Filter(user=user)
@@ -128,10 +130,7 @@ def main():
     
     os.chdir(script_dir)
 
-    if len(sys.argv) == 1:
-        Filter().main_menu()
-    else:
-        cli()
+    cli()
 
 
 if __name__ == '__main__':
