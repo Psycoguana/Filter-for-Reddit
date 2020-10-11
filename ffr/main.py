@@ -6,9 +6,11 @@ import click
 
 from ffr.filter import Filter
 from ffr.login import login as auth
+from ffr import __version__
 
 
 @click.group(invoke_without_command=True)
+@click.version_option(prog_name="Filter for Reddit", version=__version__)
 @click.pass_context
 @click.option("-l", "--limit", type=int, help="Specify the maximum amount of elements to retrieve")
 @click.option("-u", "--user", help="Specify which user to use.")
@@ -16,15 +18,15 @@ def cli(ctx, user, limit):
 
     if ctx.invoked_subcommand is None:
         Filter().main_menu()
+    elif ctx.invoked_subcommand == 'login':
+        # Does not create the Filter object when login, cause there's no credentials that can be used.
+        pass
     elif user and limit:
         ctx.obj = Filter(user, limit)
     elif user:
         ctx.obj = Filter(user=user)
     elif limit:
-        ctx.obj = Filter(limit=limit)
-    elif ctx.invoked_subcommand == 'login':
-        # Does not create the Filter object when login, cause there's no credentials that can be used.
-        pass
+        ctx.obj = Filter(limit=limit)    
     else:
         ctx.obj = Filter()
 
