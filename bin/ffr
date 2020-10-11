@@ -12,4 +12,4 @@ if __package__ is None and not hasattr(sys, 'frozen'):
 import ffr.main
 
 if __name__ == '__main__':
-    ffr.main.main()
+    ffr.main.cli()
