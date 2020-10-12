@@ -17,7 +17,7 @@ from ffr import __version__
 def cli(ctx, user, limit):
 
     if ctx.invoked_subcommand is None:
-        Filter().main_menu()
+        Filter(async_mode=True).main_menu()
     elif ctx.invoked_subcommand == 'login':
         # Does not create the Filter object when login, cause there's no credentials that can be used.
         pass
@@ -34,7 +34,6 @@ def cli(ctx, user, limit):
 @cli.command(help="Get everything that's been saved.")
 @click.pass_obj
 def show_all(ctx: Filter):
-    print("Getting every saved element...")
     matched = ctx.get_all()
     ctx.parse_content(matched)
 
@@ -42,7 +41,6 @@ def show_all(ctx: Filter):
 @cli.command(help="Get every saved post.")
 @click.pass_obj
 def posts(ctx: Filter):
-    print("Getting every saved post...")
     matched = ctx.get_posts()
     ctx.parse_content(matched)
 
@@ -50,7 +48,6 @@ def posts(ctx: Filter):
 @cli.command(help="Get every saved comment.")
 @click.pass_obj
 def comments(ctx: Filter):
-    print("Getting every saved comment...")
     matched = ctx.get_comments()
     ctx.parse_content(matched)
 
@@ -58,7 +55,6 @@ def comments(ctx: Filter):
 @cli.command(help="Get every saved post that only contains text.")
 @click.pass_obj
 def text_only(ctx: Filter):
-    print("Filtering only-text posts...")
     matched = ctx.get_self()
     ctx.parse_content(matched)
 
@@ -67,7 +63,6 @@ def text_only(ctx: Filter):
 @click.argument('media_type', required=True, type=click.Choice(['img', 'gif', 'vid']))
 @click.pass_obj
 def filter_media(ctx: Filter, media_type):
-    print(f"Filtering media with type: {media_type}")
     matched = ctx.get_media(media_type)
     ctx.parse_content(matched)
 
@@ -76,7 +71,6 @@ def filter_media(ctx: Filter, media_type):
 @click.argument('subs', nargs=-1, required=True)
 @click.pass_obj
 def subreddits(ctx: Filter, subs):
-    print("Filtering subreddits...")
     matched = ctx.get_subreddit([x.lower() for x in subs])
     ctx.parse_content(matched)
 
@@ -85,7 +79,6 @@ def subreddits(ctx: Filter, subs):
 @click.argument('query', required=True)
 @click.pass_obj
 def search_posts(ctx: Filter, query):
-    print(f"Searching {query} in saved posts...")
     matched = ctx.search_posts(query)
     ctx.parse_content(matched)
 
@@ -94,7 +87,6 @@ def search_posts(ctx: Filter, query):
 @click.argument('query', required=True)
 @click.pass_obj
 def search_comments(ctx: Filter, query):
-    print(f"Searching {query} in saved comments...")
     matched = ctx.search_comments(query)
     ctx.parse_content(matched)
 
@@ -102,7 +94,6 @@ def search_comments(ctx: Filter, query):
 @cli.command(help="Filter every element marked as NSFW.")
 @click.pass_obj
 def get_nsfw(ctx: Filter):
-    print("Filtering nsfw content...")
     matched = ctx.get_nsfw()
     ctx.parse_content(matched)
 
@@ -110,7 +101,6 @@ def get_nsfw(ctx: Filter):
 @cli.command(help="Get posts with links to non-Reddit websites.")
 @click.pass_obj
 def external_links(ctx: Filter):
-    print("Filtering posts with external links...")
     matched = ctx.get_external_links()
     ctx.parse_content(matched)
 

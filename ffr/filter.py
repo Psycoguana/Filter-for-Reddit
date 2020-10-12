@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import sys
+import concurrent.futures
 from configparser import DuplicateSectionError, NoSectionError, ParsingError
 
 import praw.exceptions
@@ -39,10 +40,11 @@ MEDIA_CHOICES = """1. Images
 
 class Filter:
 
-    def __init__(self, user='USER', limit=500):
+    def __init__(self, user='USER', limit=500, async_mode=False):
         self.user = user
         self.limit = limit
-        self.saved = self.get_saved()
+        self.async_mode = async_mode
+        self.saved = self.get_saved() if not async_mode else None
 
     @staticmethod
     def _clear_screen():
@@ -50,9 +52,15 @@ class Filter:
 
     def main_menu(self):
         self._clear_screen()
-        user_input = input(CHOICES)
         matched = []
-        print("")
+
+        # Start a thread that get the saved posts and show the possible choices
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(self.get_saved)
+            user_input = input(CHOICES)
+
+        # Wait until get_saved() returns.
+        self.saved = future.result()
 
         while user_input != '0':
             if user_input == '1':
@@ -116,8 +124,12 @@ class Filter:
         """Returns every saved element as a list of RedditBase"""
         try:
             reddit = praw.Reddit(self.user, user_agent='filter_for_reddit')
-            print("Getting saved elements...")
+            # Only show this line when called from the cli, not the TUI.
+            if not self.async_mode:
+                print("Getting saved elements...")
+
             return reddit.user.me().saved(limit=self.limit)
+
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration \
                 exist, is not empty and written correctly.")
@@ -159,7 +171,8 @@ class Filter:
     def parse_content(self, elements):
         """Parse content, showing a short title or comment body,
         also creating a direct link, then call _show_table"""
-
+        print("Parsing content...")
+        
         table_data = []
         rlink = "https://www.reddit.com"
         slink = "https://redd.it"
@@ -209,9 +222,13 @@ class Filter:
 
     def get_all(self):
         """Just return every saved item, no filter applied."""
+        
+        print("Getting every saved element...")        
         return [x for x in self.saved]
 
     def get_self(self):
+        print("Filtering only-text posts...")
+
         self_posts = []
         for element in self.saved:
             if type(element) == Submission and element.is_self:
@@ -220,6 +237,8 @@ class Filter:
         return self_posts
 
     def get_nsfw(self):
+        print("Filtering nsfw content...")
+
         nsfw = []
         for element in self.saved:
             if element.over_18:
@@ -227,6 +246,8 @@ class Filter:
         return nsfw
 
     def get_subreddit(self, subreddits):
+        print("Filtering subreddits...")
+
         matched_subreddits = []
         for element in self.saved:
             if str(element.subreddit).lower() in subreddits:
@@ -236,6 +257,8 @@ class Filter:
 
     def get_media(self, media_type):
         """Get media, it can be video, gif or image"""
+        print(f"Filtering media with type: {media_type}")
+
         # Here we set the pattern according to the type of file we want
         if media_type == "img":
             pattern = r"i.redd.it\/.+\.(jpg|jpeg|png)|imgur.com\/.+\.(jpg|jpeg|png)"
@@ -259,6 +282,8 @@ class Filter:
         return matched_posts
 
     def get_external_links(self):
+        print("Filtering posts with external links...")
+
         posts = []
         # This should match any website that is not:
         # Reddit, Imgur, Gfycat, Youtube, Pornhub or Vimeo
@@ -275,6 +300,7 @@ class Filter:
         return posts
 
     def get_posts(self):
+        print("Getting every saved post...")
         posts = []
         for element in self.saved:
             if type(element) == Submission:
@@ -282,6 +308,8 @@ class Filter:
         return posts
 
     def get_comments(self):
+        print("Getting every saved comment...")
+
         comments = []
         for element in self.saved:
             if type(element) == Comment:
@@ -289,6 +317,8 @@ class Filter:
         return comments
 
     def search_posts(self, query):
+        print(f"Searching {query} in saved posts...")
+
         # TODO: Improve search, things like "tip" don't show up.
         posts = self.get_posts()
         matched_posts = []
@@ -299,6 +329,8 @@ class Filter:
         return matched_posts
 
     def search_comments(self, query):
+        print(f"Searching {query} in saved comments...")
+
         comments = self.get_comments()
         matched_comments = []
 
