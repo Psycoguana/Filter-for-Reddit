@@ -19,8 +19,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-    - name: build with pyinstaller
-      run: |
-        pyinstaller bin/ffr
-    - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+        - name: build with pyinstaller
+    
+    - uses: JackMcKew/pyinstaller-action-windows@main
+      with:
+        path: bin/ffr
+        
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-exe
+        path: src/dist/windows
+        
+    - name: Display structure of downloaded files
+      run: ls -R
