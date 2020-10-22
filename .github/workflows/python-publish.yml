@@ -17,7 +17,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.x'
     
     - name: Install dependencies
       run: |
@@ -30,6 +30,8 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist bdist_wheel
+        #twine upload dist/*
+        
         
     - uses: actions/upload-artifact@v2
       with:
