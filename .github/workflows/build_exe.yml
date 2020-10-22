@@ -14,12 +14,12 @@ jobs:
     - name: PyInstaller Windows
       uses: JackMcKew/pyinstaller-action-windows@main
       with:
-        path: bin/ffr
+        path: bin
         
     - uses: actions/upload-artifact@v2
       with:
         name: my-exe
-        path: src/dist/windows
+        path: bin/dist/windows
         
     - name: Display structure of downloaded files
       run: ls -R
