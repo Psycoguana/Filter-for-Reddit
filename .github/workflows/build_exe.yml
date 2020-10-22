@@ -22,3 +22,5 @@ jobs:
     - name: build with pyinstaller
       run: |
         pyinstaller bin/ffr
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v2
