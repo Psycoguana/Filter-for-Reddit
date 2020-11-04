@@ -18,7 +18,7 @@ jobs:
       id: tag
       run: |
         echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
-        echo ${{ steps.tag.outputs.tag }}
+        echo ${{ steps.vars.outputs.tag }}
     
     - name: Set up Python
       uses: actions/setup-python@v2
