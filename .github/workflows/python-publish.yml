@@ -42,5 +42,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         path: |
-          dist/ffr-*.tar.gz
+          dist/ffr-${{ steps.vars.outputs.tag }}.tar.gz
           dist/ffr-*-py3-none-any.whl
