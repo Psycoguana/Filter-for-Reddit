@@ -3,9 +3,10 @@
 
 name: Upload Python Package
 
-on:  
-  pull_request:
-    branches: [master]
+on:
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   build:
@@ -17,8 +18,8 @@ jobs:
     - name: Get TAG
       id: tag
       run: |
-        echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
-        echo ${{ GITHUB_REF }}
+        echo ::set-output name=tag::${ GITHUB_REF#refs/tags/ }
+        echo TAG: ${{ steps.tag.outputs.tag }}
     
     - name: Set up Python
       uses: actions/setup-python@v2
