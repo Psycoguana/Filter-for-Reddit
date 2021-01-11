@@ -1,8 +1,7 @@
 import click
 
-from ffr.filter import Filter
 from ffr.login import login as auth
-from ffr import __version__
+from version import __version__
 
 
 @click.group(invoke_without_command=True)
@@ -11,7 +10,6 @@ from ffr import __version__
 @click.option("-l", "--limit", type=int, help="Specify the maximum amount of elements to retrieve")
 @click.option("-u", "--user", help="Specify which user to use.")
 def cli(ctx, user, limit):
-
     if ctx.invoked_subcommand is None:
         Filter(async_mode=True).main_menu()
     elif ctx.invoked_subcommand == 'login':
@@ -22,7 +20,7 @@ def cli(ctx, user, limit):
     elif user:
         ctx.obj = Filter(user=user)
     elif limit:
-        ctx.obj = Filter(limit=limit)    
+        ctx.obj = Filter(limit=limit)
     else:
         ctx.obj = Filter()
 

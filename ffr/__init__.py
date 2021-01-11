@@ -1,9 +1,6 @@
-from pkg_resources import get_distribution
 import pathlib
 import sys
 import os
-
-__version__ = get_distribution('ffr').version
 
 # This sets the Current Working Directory to wherever the script is located.
 # Ensuring the script gets the correct path of praw.ini no matter from where it's called.

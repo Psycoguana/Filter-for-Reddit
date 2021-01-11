@@ -3,9 +3,13 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+main_ns = {}
+with open('ffr/version.py') as f:
+    exec(f.read(), main_ns)
+
 setuptools.setup(
     name="ffr",
-    version="0.0.4",
+    version=main_ns['__version__'],
     author="Psycoguana",
     author_email="",
     description="Filter for Reddit saves",
