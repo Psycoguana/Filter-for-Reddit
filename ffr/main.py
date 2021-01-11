@@ -1,7 +1,7 @@
 import click
 
 from ffr.filter import Filter
-from ffr.login import login as auth
+from ffr.login import is_new_user, login as auth
 from version import __version__
 
 
@@ -11,7 +11,10 @@ from version import __version__
 @click.option("-l", "--limit", type=int, help="Specify the maximum amount of elements to retrieve")
 @click.option("-u", "--user", help="Specify which user to use.")
 def cli(ctx, user, limit):
-    if ctx.invoked_subcommand is None:
+    if is_new_user():
+        print("You can't filter any post until you log in. Don't worry, it's only the first time :)\n")
+        auth()
+    elif ctx.invoked_subcommand is None:
         Filter(async_mode=True).main_menu()
     elif ctx.invoked_subcommand == 'login':
         # Does not create the Filter object when login, cause there's no credentials that can be used.
