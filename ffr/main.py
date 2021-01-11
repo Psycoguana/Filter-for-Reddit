@@ -1,5 +1,6 @@
 import click
 
+from ffr.filter import Filter
 from ffr.login import login as auth
 from version import __version__
 
