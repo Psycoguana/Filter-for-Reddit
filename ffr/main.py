@@ -1,7 +1,3 @@
-import os
-import pathlib
-import sys
-
 import click
 
 from ffr.filter import Filter
