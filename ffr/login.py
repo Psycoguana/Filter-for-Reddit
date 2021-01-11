@@ -21,6 +21,7 @@ from rich.markdown import Markdown
 
 console = Console()
 
+
 def login():
     console.print(Markdown("# Login"))
     console.print(
@@ -31,9 +32,11 @@ def login():
         "\nPut http://localhost:8080 in the redirect uri field and click create app"
     )
 
-    client_id = console.input("\n[indian_red][u]Enter the [bold]Client ID[/bold][/u][/indian_red], it's the line just under Personal use script at the top: ")
+    client_id = console.input(
+        "\n[indian_red][u]Enter the [bold]Client ID[/bold][/u][/indian_red], it's the line just under Personal use script at the top: ")
 
-    client_secret = console.input("[indian_red][u]Enter the [bold]Client secret[/bold][/u][/indian_red], it's the line next to secret: ")
+    client_secret = console.input(
+        "[indian_red][u]Enter the [bold]Client secret[/bold][/u][/indian_red], it's the line next to secret: ")
 
     username = console.input("[indian_red][u]Enter your [bold]Username[/bold][/u][/indian_red]: ")
 
@@ -51,7 +54,8 @@ def login():
     # Get oauth url
     url = reddit.auth.url(["identity"], state, "permanent")
     sleep(3)
-    console.print(f"[indian_red]\nThe link to authorize this script will open in 3 seconds\nIf the url didn't open, please manually open this link[/indian_red]: " )
+    console.print(
+        f"[indian_red]\nThe link to authorize this script will open in 3 seconds\nIf the url didn't open, please manually open this link[/indian_red]: ")
     webbrowser.open(url)
     # Printing the url with rich makes the terminal not recognize the entire url.
     print(url)
@@ -75,7 +79,6 @@ def login():
         send_message(client, params["error"])
         return 1
 
-    
     # Generate the praw.ini file with the provided information.
     praw_section = 'USER' if is_new_user() else username
 
@@ -84,7 +87,7 @@ def login():
     \nclient_secret={client_secret}\
     \nusername={username}\
     \npassword={password}\n"
-    
+
     dst = get_praw_conf()
     # Write info into praw.ini.
     add_to_file(dst, user_info)
@@ -96,6 +99,7 @@ def login():
 
     send_message(client, "<h1>Perfect, now you can close this tab and start using Filter for Reddit! &#128515</h1>")
     return 0
+
 
 def receive_connection():
     """Wait for and then return a connected socket..
@@ -110,6 +114,7 @@ def receive_connection():
     client = server.accept()[0]
     server.close()
     return client
+
 
 def send_message(client, message):
     """Send message to client and close the connection."""
@@ -126,7 +131,7 @@ def add_to_file(dst, string):
 
 def get_praw_conf():
     """Returns the path to the praw.ini config file"""
-    
+
     # Borrowed from https://github.com/praw-dev/praw/blob/973dc8a9471a0c05e88dde9de3463b3863e6eecc/praw/settings.py#L31
     if 'APPDATA' in os.environ:  # Windows
         os_config_path = os.environ['APPDATA']
@@ -136,8 +141,9 @@ def get_praw_conf():
         os_config_path = os.path.join(os.environ['HOME'], '.config')
     else:
         os_config_path = os.path.dirname(sys.modules[__name__].__file__)
-    
+
     return os.path.join(os_config_path, 'praw.ini')
+
 
 def is_new_user():
     """Return True if there is no section in the praw.ini file
