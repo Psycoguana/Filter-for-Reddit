@@ -94,7 +94,7 @@ def login():
     \nIf this is your second account, you'll have to specify the user with the --user flag."
     console.print(message)
 
-    send_message(client, "<h1>Perfect, now you can go close this tab and start using Filter for Reddit! &#128515</h1>")
+    send_message(client, "<h1>Perfect, now you can close this tab and start using Filter for Reddit! &#128515</h1>")
     return 0
 
 def receive_connection():
