@@ -1,8 +1,8 @@
+import concurrent.futures
 import logging
 import os
 import re
 import sys
-import concurrent.futures
 from configparser import DuplicateSectionError, NoSectionError, ParsingError
 
 import praw.exceptions
@@ -11,31 +11,32 @@ from praw.models.reddit.comment import Comment
 from praw.models.reddit.submission import Submission
 from prawcore.exceptions import ResponseException, OAuthException
 from rich import box
-from rich.text import Text
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.table import Table
+from rich.text import Text
 
-# TODO: Improve menu
-CHOICES = """What do you want to get?
-1. Get every Posts and Comment.
-2. Get every Post.
-3. Get every Comment.
-4. Get Text-Only Posts.
-5. Get Posts with Media.
-6. Filter specific subreddits.
-7. Search in Post's Titles.
-8. Search in Comments.
-9. Filter NSFW.
-10. Posts with external websites.
+CHOICES = """  [b]What do you want to get?[/b]
 
-0. Exit.\n\n"""
+ [b green] 1.[/b green] Get every Post and Comment.
+ [b green] 2.[/b green] Get every Post.
+ [b green] 3.[/b green] Get every Comment.
+ [b green] 4.[/b green] Get Text-Only Posts.
+ [b green] 5.[/b green] Get Posts with Media.
+ [b green] 6.[/b green] Filter specific subreddits.
+ [b green] 7.[/b green] Search in Post's Titles.
+ [b green] 8.[/b green] Search in Comments.
+ [b green] 9.[/b green] Filter NSFW.
+ [b green]10.[/b green] Posts with external websites.
 
-MEDIA_CHOICES = """1. Images
-2. Gifs
-3. Videos
-4. All of the above (Not working...)
+[bold red]  0.[/bold red] Exit.\n\n"""
 
-0. Return"""
+MEDIA_CHOICES = """[b green] 1.[/b green] Images
+[b green] 2.[/b green] Gifs
+[b green] 3.[/b green] Videos
+[b red] 4.[/b red] All of the above (Not working...)
+
+[b red] 0.[/b red] Return\n\n"""
 
 
 class Filter:
@@ -43,6 +44,7 @@ class Filter:
     def __init__(self, user='USER', limit=500, async_mode=False):
         self.user = user
         self.limit = limit
+        self.console = Console()
         self.async_mode = async_mode
         self.saved = self.get_saved() if not async_mode else None
 
@@ -57,7 +59,9 @@ class Filter:
         # Start a thread that get the saved posts and show the possible choices
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(self.get_saved)
-            user_input = input(CHOICES)
+            welcome_message = Markdown('# Welcome to Filter for Reddit!', justify='center')
+            self.console.print(welcome_message)
+            user_input = self.console.input(CHOICES)
 
         # Wait until get_saved() returns.
         self.saved = future.result()
@@ -77,12 +81,12 @@ class Filter:
                 subs = self.ask_for_subreddits()
                 matched = self.get_subreddit(subs)
             elif user_input == '7':
-                print("What do you want to search: ", end='')
+                self.console.print(":mag_right: [b]In post's titles, search for:[/b] ", end='')
                 query = input()
                 print("")
                 matched = self.search_posts(query)
             elif user_input == '8':
-                print("What do you want to search: ", end='')
+                self.console.print(":mag_right: [b]In comments, search for:[/b] ", end='')
                 query = input()
                 print("")
                 matched = self.search_comments(query)
@@ -96,11 +100,10 @@ class Filter:
             self.parse_content(matched)
             sys.exit(0)
 
-    @staticmethod
-    def ask_for_subreddits():
+    def ask_for_subreddits(self):
         """ Asks for subreddits, splits with a + sign and returns a list """
         entered_subs = []
-        print("Input your subs (wtf, python): ")
+        self.console.print("Input your subs like [b]wtf, python[/b]: ", end='')
         user_input = input().split(',')
 
         for sub in user_input:
@@ -108,7 +111,7 @@ class Filter:
         return entered_subs
 
     def media_menu(self):
-        user_input = input(MEDIA_CHOICES)
+        user_input = self.console.input(MEDIA_CHOICES)
         param = ""
         if user_input == '1':
             param = "img"
@@ -122,13 +125,18 @@ class Filter:
 
     def get_saved(self):
         """Returns every saved element as a list of RedditBase"""
+        spinner = None
         try:
             reddit = praw.Reddit(self.user, user_agent='filter_for_reddit')
             # Only show this line when called from the cli, not the TUI.
             if not self.async_mode:
-                print("Getting saved elements...")
+                spinner = self.console.status("Getting saved elements...")
+                spinner.start()
 
-            return reddit.user.me().saved(limit=self.limit)
+            saved_posts = reddit.user.me().saved(limit=self.limit)
+            if spinner:
+                spinner.stop()
+            return saved_posts
 
         except NoSectionError:
             print("Please make sure the name of the praw.ini configuration \
@@ -171,8 +179,9 @@ class Filter:
     def parse_content(self, elements):
         """Parse content, showing a short title or comment body,
         also creating a direct link, then call _show_table"""
-        print("Parsing content...")
-        
+        spinner = self.console.status("Parsing content...")
+        spinner.start()
+
         table_data = []
         rlink = "https://www.reddit.com"
         slink = "https://redd.it"
@@ -196,10 +205,11 @@ class Filter:
             table_data.append(
                 [sub, Text(title, style=f"link {link}", no_wrap=True), link])
 
+        spinner.stop()
         if table_data:
             self._show_table(table_data)
         else:
-            print("There was nothing found for this query :/")
+            self.console.print("There was nothing found for this query :pensive:")
 
     def _show_table(self, table_data):
         table = Table(header_style="bold", show_lines=True,
@@ -222,42 +232,56 @@ class Filter:
 
     def get_all(self):
         """Just return every saved item, no filter applied."""
-        
-        print("Getting every saved element...")        
-        return [x for x in self.saved]
+
+        spinner = self.console.status("Getting every saved element...")
+        spinner.start()
+
+        matched = [x for x in self.saved]
+
+        spinner.stop()
+        return matched
 
     def get_self(self):
-        print("Filtering only-text posts...")
+        spinner = self.console.status("Filtering Text-Only posts...")
+        spinner.start()
 
         self_posts = []
         for element in self.saved:
             if type(element) == Submission and element.is_self:
                 self_posts.append(element)
 
+        spinner.stop()
         return self_posts
 
     def get_nsfw(self):
-        print("Filtering nsfw content...")
+        spinner = self.console.status("Filtering nsfw content...")
+        spinner.start()
 
         nsfw = []
         for element in self.saved:
             if element.over_18:
                 nsfw.append(element)
+
+        spinner.stop()
         return nsfw
 
     def get_subreddit(self, subreddits):
-        print("Filtering subreddits...")
+        spinner = self.console.status("Filtering subreddits...")
+        spinner.start()
+        # print("Filtering subreddits...")
 
         matched_subreddits = []
         for element in self.saved:
             if str(element.subreddit).lower() in subreddits:
                 matched_subreddits.append(element)
 
+        spinner.stop()
         return matched_subreddits
 
     def get_media(self, media_type):
         """Get media, it can be video, gif or image"""
-        print(f"Filtering media with type: {media_type}")
+        spinner = self.console.status(f"Filtering media with type: {media_type}")
+        spinner.start()
 
         # Here we set the pattern according to the type of file we want
         if media_type == "img":
@@ -279,10 +303,12 @@ class Filter:
             if type(element) == Submission and re.search(pattern, element.url):
                 matched_posts.append(element)
 
+        spinner.stop()
         return matched_posts
 
     def get_external_links(self):
-        print("Filtering posts with external links...")
+        spinner = self.console.status("Filtering posts with external links...")
+        spinner.start()
 
         posts = []
         # This should match any website that is not:
@@ -297,10 +323,11 @@ class Filter:
             if type(element) == Submission:
                 if re.search(pattern, element.url):
                     posts.append(element)
+
+        spinner.stop()
         return posts
 
     def get_posts(self):
-        print("Getting every saved post...")
         posts = []
         for element in self.saved:
             if type(element) == Submission:
@@ -308,8 +335,6 @@ class Filter:
         return posts
 
     def get_comments(self):
-        print("Getting every saved comment...")
-
         comments = []
         for element in self.saved:
             if type(element) == Comment:
@@ -317,7 +342,8 @@ class Filter:
         return comments
 
     def search_posts(self, query):
-        print(f"Searching {query} in saved posts...")
+        spinner = self.console.status(f"Searching [b u]{query}[/b u] in saved posts...")
+        spinner.start()
 
         # TODO: Improve search, things like "tip" don't show up.
         posts = self.get_posts()
@@ -326,17 +352,22 @@ class Filter:
         for post in posts:
             if query.lower() in str(post.title).lower():
                 matched_posts.append(post)
+
+        spinner.stop()
         return matched_posts
 
     def search_comments(self, query):
-        print(f"Searching {query} in saved comments...")
+        spinner = self.console.status(f"Searching [b u]{query}[/b u] in saved comments...")
+        spinner.start()
 
         comments = self.get_comments()
-        matched_comments = []
 
+        matched_comments = []
         for comment in comments:
             if query.lower() in str(comment.body).lower():
                 matched_comments.append(comment)
+
+        spinner.stop()
         return matched_comments
 
 
