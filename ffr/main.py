@@ -1,8 +1,14 @@
 import click
 
-from ffr.filter import Filter
-from ffr.login import is_new_user, login as auth
+try:
+    from ffr.filter import Filter
+    from ffr.login import is_new_user, login as auth
+except ModuleNotFoundError:
+    from filter import Filter
+    from login import is_new_user, login as auth
+
 from version import __version__
+
 
 
 @click.group(invoke_without_command=True)
